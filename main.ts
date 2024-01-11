@@ -1,89 +1,195 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import {
+	App,
+	MarkdownView,
+	Notice,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+	TFile,
+	moment,
+} from "obsidian";
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
+interface SingleFileDailyNotesSettings {
+	noteName: string;
+	noteLocation: string;
+	hLevel: number;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = {
+	noteName: "Daily Notes",
+	noteLocation: "",
+	hLevel: 5,
+};
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class SingleFileDailyNotes extends Plugin {
+	settings: SingleFileDailyNotesSettings;
 
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+		this.addSettingTab(new SingleFileDailyNotesSettingTab(this.app, this));
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		// --------------------------------------------------------------------
+		// Add command palette action to open/create daily notes file
 
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
+			id: "open-daily-notes",
+			name: "Open daily notes",
 			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
+				this.openOrCreateDailyNotesFile();
+			},
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		// --------------------------------------------------------------------
+		// Add ribbon button to open/create daily notes file
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
+		this.addRibbonIcon("calendar-days", "Open daily notes", () => {
+			this.openOrCreateDailyNotesFile();
 		});
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		// --------------------------------------------------------------------
+		// Add file listener for updating daily notes file
+
+		this.app.workspace.on("file-open", this.onFileOpen.bind(this));
 	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Updates the daily notes file if it is opened
+	 * @param file - opened file
+	 */
+	async onFileOpen(file: TFile) {
+		if (file && file.name == `${this.settings.noteName}.md`) {
+			await this.updateDailyNote(file);
+			await this.positionCursor(file);
+		}
+	}
+
+	async positionCursor(file: TFile) {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (view) {
+			const fileContent = await this.app.vault.read(file);
+			const lines = fileContent.split("\n");
+
+			let i = 0;
+			while (!lines[i].startsWith("-")) {
+				i++;
+			}
+
+			if (lines[i] == "- entry") {
+				// Select the dummy entry
+				view.editor.setSelection(
+					{ line: i, ch: 2 },
+					{ line: i, ch: lines[i].length }
+				);
+			} else {
+				// Move cursor to the end of today's daily notes
+				while (lines[i].startsWith("-")) {
+					i++;
+				}
+
+				view.editor.setCursor(i - 1, lines[i - 1].length);
+			}
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Opens daily notes file and creates one if it doesn't exist
+	 */
+	async openOrCreateDailyNotesFile() {
+		const path = this.settings.noteLocation;
+		const fileName = this.settings.noteName;
+
+		if (fileName == "") {
+			new Notice(
+				"Daily notes file name cannot be empty. Change this in the plugin settings."
+			);
+			return;
+		}
+
+		const filePath =
+			path == "" ? `${fileName}.md` : `${path}\\${fileName}.md`;
+
+		let file = this.app.vault.getAbstractFileByPath(filePath);
+		if (!file) {
+			file = await this.app.vault.create(filePath, "");
+		}
+
+		if (file instanceof TFile) {
+			await this.app.workspace.getLeaf().openFile(file);
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Updates the daily notes file with today's note
+	 * @param file - daily notes file to update
+	 */
+	async updateDailyNote(file: TFile) {
+		return this.app.vault.process(file, (data) => {
+			return this.updatedNote(data);
+		});
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Returns updated daily notes file
+	 * @param data - current daily notes file
+	 * @returns upated daily notes file
+	 */
+	updatedNote(data: string): string {
+		const lines = data.split("\n");
+		const hLevel = this.settings.hLevel;
+
+		const todayHeading =
+			"#".repeat(hLevel) + " " + moment().format("DD-MM-YYYY, dddd");
+
+		const hasTodaySection = lines.some((line) =>
+			line.startsWith(todayHeading)
+		);
+
+		if (!hasTodaySection) {
+			let updatedFile = data;
+
+			if (moment().date() == 1) {
+				const monthSection =
+					"\n---\n" +
+					"#".repeat(hLevel - 1) +
+					" " +
+					moment().subtract(1, "day").format("MMMM YYYY") +
+					"\n";
+
+				updatedFile = monthSection + updatedFile;
+			}
+
+			const todaySection = todayHeading + "\n" + "- entry" + "\n";
+			updatedFile = todaySection + updatedFile;
+
+			return updatedFile;
+		}
+
+		return data;
+	}
+
+	// ------------------------------------------------------------------------
 
 	onunload() {
-
+		this.app.workspace.off("file-open", this.onFileOpen);
 	}
 
+	// ------------------------------------------------------------------------
+
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData()
+		);
 	}
 
 	async saveSettings() {
@@ -91,44 +197,61 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+class SingleFileDailyNotesSettingTab extends PluginSettingTab {
+	plugin: SingleFileDailyNotes;
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: SingleFileDailyNotes) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
+		containerEl.createEl("h2", { text: this.plugin.manifest.name });
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName("Name for daily notes file")
+			.setDesc("Provide a custom name for the daily notes file")
+			.addText((text) =>
+				text
+					.setPlaceholder("Enter the file name")
+					.setValue(this.plugin.settings.noteName)
+					.onChange(async (value) => {
+						this.plugin.settings.noteName = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Location of daily notes file")
+			.setDesc(
+				"Provide a path where you want the daily notes file to live (leave empty for root)"
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("Enter the path")
+					.setValue(this.plugin.settings.noteLocation)
+					.onChange(async (value) => {
+						this.plugin.settings.noteLocation = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Heading level of daily note sections")
+			.setDesc(
+				"Provide the type of heading that should be used for a daily note (between 1 to 6)"
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("Enter the heading level")
+					.setValue(this.plugin.settings.hLevel.toString())
+					.onChange(async (value) => {
+						this.plugin.settings.hLevel = parseInt(value);
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }
