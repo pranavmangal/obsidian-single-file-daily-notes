@@ -85,7 +85,7 @@ export default class SingleFileDailyNotes extends Plugin {
 				);
 			} else {
 				// Move cursor to the end of today's daily notes
-				while (lines[i].startsWith("-")) {
+				while (lines[i].trimStart().startsWith("-")) {
 					i++;
 				}
 
@@ -111,7 +111,7 @@ export default class SingleFileDailyNotes extends Plugin {
 		}
 
 		const filePath =
-			path == "" ? `${fileName}.md` : `${path}\\${fileName}.md`;
+			path == "" ? `${fileName}.md` : `${path}\/${fileName}.md`;
 
 		let file = this.app.vault.getAbstractFileByPath(filePath);
 		if (!file) {
