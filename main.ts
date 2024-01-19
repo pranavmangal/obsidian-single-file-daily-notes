@@ -23,6 +23,9 @@ const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = {
 	hLevel: 4,
 };
 
+const DEFAULT_DATE_FORMAT = "DD-MM-YYYY, dddd";
+const DEFAULT_DUMMY_ENTRY = "- entry";
+
 export default class SingleFileDailyNotes extends Plugin {
 	settings: SingleFileDailyNotesSettings;
 
@@ -111,20 +114,24 @@ export default class SingleFileDailyNotes extends Plugin {
 			const fileContent = await this.app.vault.read(file);
 			const lines = fileContent.split("\n");
 
+			// Skip to today's section
 			let i = 0;
-			while (!lines[i].startsWith("-")) {
+			while (!lines[i].startsWith(this.getTodayHeading())) {
 				i++;
 			}
 
-			if (lines[i] == "- entry") {
+			// Move to the first line of today's section
+			i++;
+
+			if (lines[i] == DEFAULT_DUMMY_ENTRY) {
 				// Select the dummy entry
 				view.editor.setSelection(
 					{ line: i, ch: 2 },
 					{ line: i, ch: lines[i].length }
 				);
 			} else {
-				// Move cursor to the end of today's daily notes
-				while (lines[i].trimStart().startsWith("-")) {
+				// Move cursor to the end of today's section
+				while (!lines[i].startsWith("#".repeat(this.settings.hLevel))) {
 					i++;
 				}
 
@@ -177,11 +184,8 @@ export default class SingleFileDailyNotes extends Plugin {
 	 */
 	updatedNote(data: string): string {
 		const lines = data.split("\n");
-		const hLevel = this.settings.hLevel;
 
-		const todayHeading =
-			"#".repeat(hLevel) + " " + moment().format("DD-MM-YYYY, dddd");
-
+		const todayHeading = this.getTodayHeading();
 		const hasTodaySection = lines.some((line) =>
 			line.startsWith(todayHeading)
 		);
@@ -192,7 +196,7 @@ export default class SingleFileDailyNotes extends Plugin {
 			if (moment().date() == 1) {
 				const monthSection =
 					"\n---\n" +
-					"#".repeat(hLevel - 1) +
+					"#".repeat(this.settings.hLevel - 1) +
 					" " +
 					moment().subtract(1, "day").format("MMMM YYYY") +
 					"\n";
@@ -200,13 +204,22 @@ export default class SingleFileDailyNotes extends Plugin {
 				updatedFile = monthSection + updatedFile;
 			}
 
-			const todaySection = todayHeading + "\n" + "- entry" + "\n";
+			const todaySection =
+				todayHeading + "\n" + DEFAULT_DUMMY_ENTRY + "\n";
 			updatedFile = todaySection + updatedFile;
 
 			return updatedFile;
 		}
 
 		return data;
+	}
+
+	getTodayHeading(): string {
+		return (
+			"#".repeat(this.settings.hLevel) +
+			" " +
+			moment().format(DEFAULT_DATE_FORMAT)
+		);
 	}
 
 	// ------------------------------------------------------------------------
