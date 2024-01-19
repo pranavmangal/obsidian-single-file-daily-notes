@@ -5,7 +5,9 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
+	TAbstractFile,
 	TFile,
+	TFolder,
 	moment,
 } from "obsidian";
 
@@ -31,7 +33,6 @@ export default class SingleFileDailyNotes extends Plugin {
 
 		// --------------------------------------------------------------------
 		// Add command palette action to open/create daily notes file
-
 		this.addCommand({
 			id: "open-daily-notes",
 			name: "Open daily notes",
@@ -42,30 +43,68 @@ export default class SingleFileDailyNotes extends Plugin {
 
 		// --------------------------------------------------------------------
 		// Add ribbon button to open/create daily notes file
-
 		this.addRibbonIcon("calendar-days", "Open daily notes", () => {
 			this.openOrCreateDailyNotesFile();
 		});
 
 		// --------------------------------------------------------------------
-		// Add file listener for updating daily notes file
-
+		// Add file open listener for updating daily notes file
 		this.app.workspace.on("file-open", this.onFileOpen.bind(this));
+
+		// Add rename listener for updating settings
+		this.app.vault.on("rename", this.onRename.bind(this));
 	}
 
 	// ------------------------------------------------------------------------
+
+	getDailyNotesFilePath(): string {
+		const file = this.settings.noteName + ".md";
+
+		if (this.settings.noteLocation == "") {
+			return file;
+		} else {
+			return this.settings.noteLocation + "/" + file;
+		}
+	}
+
+	/**
+	 * Updates the settings to reflect new daily notes file name or path
+	 * @param file - renamed file or folder
+	 * @param oldPath - old path of renamed entity
+	 */
+	async onRename(file: TAbstractFile, oldPath: string) {
+		const currentPath = this.getDailyNotesFilePath();
+
+		if (file instanceof TFile && oldPath == currentPath) {
+			this.settings.noteName = file.basename;
+		}
+
+		if (file instanceof TFolder && currentPath.startsWith(oldPath)) {
+			const newPath = file.path + currentPath.substring(oldPath.length);
+			const justPath = newPath.substring(0, newPath.lastIndexOf("/"));
+			this.settings.noteLocation = justPath;
+		}
+
+		await this.saveSettings();
+	}
 
 	/**
 	 * Updates the daily notes file if it is opened
 	 * @param file - opened file
 	 */
 	async onFileOpen(file: TFile) {
-		if (file && file.name == `${this.settings.noteName}.md`) {
+		if (file && file.path == this.getDailyNotesFilePath()) {
 			await this.updateDailyNote(file);
 			await this.positionCursor(file);
 		}
 	}
 
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Tries to intelligently position the cursor in the daily notes file
+	 * @param file - daily notes file
+	 */
 	async positionCursor(file: TFile) {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (view) {
@@ -100,18 +139,14 @@ export default class SingleFileDailyNotes extends Plugin {
 	 * Opens daily notes file and creates one if it doesn't exist
 	 */
 	async openOrCreateDailyNotesFile() {
-		const path = this.settings.noteLocation;
-		const fileName = this.settings.noteName;
-
-		if (fileName == "") {
+		if (this.settings.noteName == "") {
 			new Notice(
 				"Daily notes file name cannot be empty. Change this in the plugin settings."
 			);
 			return;
 		}
 
-		const filePath =
-			path == "" ? `${fileName}.md` : `${path}\/${fileName}.md`;
+		const filePath = this.getDailyNotesFilePath();
 
 		let file = this.app.vault.getAbstractFileByPath(filePath);
 		if (!file) {
@@ -134,8 +169,6 @@ export default class SingleFileDailyNotes extends Plugin {
 			return this.updatedNote(data);
 		});
 	}
-
-	// ------------------------------------------------------------------------
 
 	/**
 	 * Returns updated daily notes file
@@ -180,6 +213,7 @@ export default class SingleFileDailyNotes extends Plugin {
 
 	onunload() {
 		this.app.workspace.off("file-open", this.onFileOpen);
+		this.app.vault.off("rename", this.onRename);
 	}
 
 	// ------------------------------------------------------------------------
