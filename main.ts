@@ -20,7 +20,7 @@ interface SingleFileDailyNotesSettings {
 const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = {
 	noteName: "Daily Notes",
 	noteLocation: "",
-	hLevel: 5,
+	hLevel: 4,
 };
 
 export default class SingleFileDailyNotes extends Plugin {
