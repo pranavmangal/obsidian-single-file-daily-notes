@@ -14,13 +14,13 @@ import {
 interface SingleFileDailyNotesSettings {
 	noteName: string;
 	noteLocation: string;
-	hLevel: number;
+	headingType: string;
 }
 
 const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = {
 	noteName: "Daily Notes",
 	noteLocation: "",
-	hLevel: 4,
+	headingType: "h3",
 };
 
 const DEFAULT_DATE_FORMAT = "DD-MM-YYYY, dddd";
@@ -60,23 +60,13 @@ export default class SingleFileDailyNotes extends Plugin {
 
 	// ------------------------------------------------------------------------
 
-	getDailyNotesFilePath(): string {
-		const file = this.settings.noteName + ".md";
-
-		if (this.settings.noteLocation == "") {
-			return file;
-		} else {
-			return this.settings.noteLocation + "/" + file;
-		}
-	}
-
 	/**
 	 * Updates the settings to reflect new daily notes file name or path
 	 * @param file - renamed file or folder
 	 * @param oldPath - old path of renamed entity
 	 */
 	async onRename(file: TAbstractFile, oldPath: string) {
-		const currentPath = this.getDailyNotesFilePath();
+		const currentPath = getDailyNotesFilePath(this.settings);
 
 		if (file instanceof TFile && oldPath == currentPath) {
 			this.settings.noteName = file.basename;
@@ -96,7 +86,7 @@ export default class SingleFileDailyNotes extends Plugin {
 	 * @param file - opened file
 	 */
 	async onFileOpen(file: TFile) {
-		if (file && file.path == this.getDailyNotesFilePath()) {
+		if (file && file.path == getDailyNotesFilePath(this.settings)) {
 			await this.updateDailyNote(file);
 			await this.positionCursor(file);
 		}
@@ -131,7 +121,7 @@ export default class SingleFileDailyNotes extends Plugin {
 				);
 			} else {
 				// Move cursor to the end of today's section
-				while (!lines[i].startsWith("#".repeat(this.settings.hLevel))) {
+				while (!lines[i].startsWith(getHeadingMd(this.settings))) {
 					i++;
 				}
 
@@ -153,7 +143,7 @@ export default class SingleFileDailyNotes extends Plugin {
 			return;
 		}
 
-		const filePath = this.getDailyNotesFilePath();
+		const filePath = getDailyNotesFilePath(this.settings);
 
 		let file = this.app.vault.getAbstractFileByPath(filePath);
 		if (!file) {
@@ -196,7 +186,7 @@ export default class SingleFileDailyNotes extends Plugin {
 			if (moment().date() == 1) {
 				const monthSection =
 					"\n---\n" +
-					"#".repeat(this.settings.hLevel - 1) +
+					"#".repeat(getHeadingLevel(this.settings) - 1) +
 					" " +
 					moment().subtract(1, "day").format("MMMM YYYY") +
 					"\n";
@@ -214,9 +204,14 @@ export default class SingleFileDailyNotes extends Plugin {
 		return data;
 	}
 
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Generates the heading for a daily note section with today's date
+	 */
 	getTodayHeading(): string {
 		return (
-			"#".repeat(this.settings.hLevel) +
+			getHeadingMd(this.settings) +
 			" " +
 			moment().format(DEFAULT_DATE_FORMAT)
 		);
@@ -287,18 +282,113 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Heading level of daily note sections")
+			.setName("Heading type for daily note sections")
 			.setDesc(
-				"Provide the type of heading that should be used for a daily note (between 1 to 6)"
+				"Provide the type of heading that should be used for the daily note section (h1 to h6)"
 			)
 			.addText((text) =>
 				text
-					.setPlaceholder("Enter the heading level")
-					.setValue(this.plugin.settings.hLevel.toString())
-					.onChange(async (value) => {
-						this.plugin.settings.hLevel = parseInt(value);
-						await this.plugin.saveSettings();
-					})
+					.setPlaceholder("Enter the heading type")
+					.setValue(this.plugin.settings.headingType.toString())
+					.onChange(
+						this.debounce(async (value: string) => {
+							const headingRegex = /^h[1-6]$/;
+							if (!headingRegex.test(value)) {
+								new Notice(
+									`Invalid heading type entered: "${value}"\nPlease fix this in the plugin settings.`
+								);
+								return;
+							}
+
+							this.plugin.settings.headingType = value;
+							await this.plugin.saveSettings();
+						}, 300)
+					)
+			);
+
+		new Setting(containerEl)
+			.setName("Update heading type in daily notes files")
+			.setDesc(
+				"Press this button to update all the headings in the daily notes file to the current heading type"
+			)
+			.addButton((button) =>
+				button.setButtonText("Update headings").onClick(() => {
+					const filePath = getDailyNotesFilePath(
+						this.plugin.settings
+					);
+					let file = this.app.vault.getAbstractFileByPath(filePath);
+					if (file instanceof TFile) {
+						this.app.vault.process(file, (data) =>
+							this.updateHeadings(data)
+						);
+
+						new Notice(
+							`Updated daily note headings to ${this.plugin.settings.headingType}`
+						);
+					} else {
+						new Notice(`Could not find daily notes file`);
+					}
+				})
 			);
 	}
+
+	updateHeadings(data: string) {
+		let lines = data.split("\n");
+
+		const dateHeadingRegex = /^(#{1,6}) (.*)/;
+		const newHeading = getHeadingMd(this.plugin.settings);
+
+		for (const [i, line] of lines.entries()) {
+			const match = dateHeadingRegex.exec(line);
+			if (
+				match &&
+				moment(match[2], DEFAULT_DATE_FORMAT, true).isValid()
+			) {
+				lines[i] = line.replace(match[1], newHeading);
+			}
+		}
+
+		return lines.join("\n");
+	}
+
+	// ------------------------------------------------------------------------
+
+	debounce(func: Function, wait: number) {
+		let timeout: NodeJS.Timeout;
+
+		return function executedFunction(...args: any) {
+			const later = () => {
+				clearTimeout(timeout);
+				func(...args);
+			};
+
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+		};
+	}
 }
+
+// Utility functions
+
+/**
+ * Returns the path for the daily notes file for the given settings
+ * @param settings
+ * @returns string - the path of the daily notes file
+ */
+const getDailyNotesFilePath = (settings: SingleFileDailyNotesSettings) => {
+	const file = settings.noteName + ".md";
+
+	if (settings.noteLocation == "") {
+		return file;
+	} else {
+		return settings.noteLocation + "/" + file;
+	}
+};
+
+const getHeadingLevel = (settings: SingleFileDailyNotesSettings) => {
+	return parseInt(settings.headingType[1]);
+};
+
+const getHeadingMd = (settings: SingleFileDailyNotesSettings) => {
+	return "#".repeat(getHeadingLevel(settings));
+};
