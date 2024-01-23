@@ -285,7 +285,7 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Heading type for daily note sections")
 			.setDesc(
-				"Provide the type of heading that should be used for the daily note section (h1 to h6)"
+				"Provide the type of heading that should be used for a daily note section (h1 to h6)"
 			)
 			.addText((text) =>
 				text
@@ -367,7 +367,7 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 	// ------------------------------------------------------------------------
 
 	debounce(func: Function, wait: number) {
-		let timeout: NodeJS.Timeout;
+		let timeout: ReturnType<typeof setTimeout>;
 
 		return function executedFunction(...args: any) {
 			const later = () => {
