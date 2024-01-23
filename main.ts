@@ -15,15 +15,16 @@ interface SingleFileDailyNotesSettings {
 	noteName: string;
 	noteLocation: string;
 	headingType: string;
+	dateFormat: string;
 }
 
 const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = {
 	noteName: "Daily Notes",
 	noteLocation: "",
 	headingType: "h3",
+	dateFormat: "DD-MM-YYYY, dddd",
 };
 
-const DEFAULT_DATE_FORMAT = "DD-MM-YYYY, dddd";
 const DEFAULT_DUMMY_ENTRY = "- entry";
 
 export default class SingleFileDailyNotes extends Plugin {
@@ -213,7 +214,7 @@ export default class SingleFileDailyNotes extends Plugin {
 		return (
 			getHeadingMd(this.settings) +
 			" " +
-			moment().format(DEFAULT_DATE_FORMAT)
+			moment().format(this.settings.dateFormat)
 		);
 	}
 
@@ -295,60 +296,72 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 							const headingRegex = /^h[1-6]$/;
 							if (!headingRegex.test(value)) {
 								new Notice(
-									`Invalid heading type entered: "${value}"\nPlease fix this in the plugin settings.`
+									`Invalid heading type entered: "${value}"` +
+										"\nPlease fix this in the plugin settings."
 								);
 								return;
-							}
+							} else {
+								this.plugin.settings.headingType = value;
+								await this.plugin.saveSettings();
 
-							this.plugin.settings.headingType = value;
-							await this.plugin.saveSettings();
-						}, 300)
+								this.updateHeadings(value);
+							}
+						}, 400)
 					)
 			);
 
-		new Setting(containerEl)
-			.setName("Update heading type in daily notes files")
-			.setDesc(
-				"Press this button to update all the headings in the daily notes file to the current heading type"
-			)
-			.addButton((button) =>
-				button.setButtonText("Update headings").onClick(() => {
-					const filePath = getDailyNotesFilePath(
-						this.plugin.settings
-					);
-					let file = this.app.vault.getAbstractFileByPath(filePath);
-					if (file instanceof TFile) {
-						this.app.vault.process(file, (data) =>
-							this.updateHeadings(data)
-						);
+		const dateFormatSettingDescription = new DocumentFragment();
+		dateFormatSettingDescription.createEl("span", {
+			text: "Provide a custom ",
+		});
+		dateFormatSettingDescription.appendChild(
+			createEl("a", {
+				text: "moment.js compatible",
+				href: "https://momentjs.com/docs/#/parsing/string-format/",
+			})
+		);
+		dateFormatSettingDescription.appendText(
+			" format string for using a different date format"
+		);
 
-						new Notice(
-							`Updated daily note headings to ${this.plugin.settings.headingType}`
-						);
-					} else {
-						new Notice(`Could not find daily notes file`);
-					}
-				})
+		new Setting(containerEl)
+			.setName("Date format for daily note headings")
+			.setDesc(dateFormatSettingDescription)
+			.addText((text) =>
+				text
+					.setPlaceholder("Enter the format string")
+					.setValue(this.plugin.settings.dateFormat)
+					.onChange(async (value) => {
+						this.plugin.settings.dateFormat = value;
+						await this.plugin.saveSettings();
+					})
 			);
 	}
 
-	updateHeadings(data: string) {
-		let lines = data.split("\n");
+	updateHeadings(value: string) {
+		const filePath = getDailyNotesFilePath(this.plugin.settings);
 
-		const dateHeadingRegex = /^(#{1,6}) (.*)/;
-		const newHeading = getHeadingMd(this.plugin.settings);
+		let file = this.app.vault.getAbstractFileByPath(filePath);
+		if (file instanceof TFile) {
+			this.app.vault.process(file, (data) => {
+				let lines = data.split("\n");
 
-		for (const [i, line] of lines.entries()) {
-			const match = dateHeadingRegex.exec(line);
-			if (
-				match &&
-				moment(match[2], DEFAULT_DATE_FORMAT, true).isValid()
-			) {
-				lines[i] = line.replace(match[1], newHeading);
-			}
+				const dateFormat = this.plugin.settings.dateFormat;
+				const dateHeadingRegex = /^(#{1,6}) (.*)/;
+				const newHeading = getHeadingMd(this.plugin.settings);
+
+				for (const [i, line] of lines.entries()) {
+					const match = dateHeadingRegex.exec(line);
+					if (match && moment(match[2], dateFormat, true).isValid()) {
+						lines[i] = line.replace(match[1], newHeading);
+					}
+				}
+
+				return lines.join("\n");
+			});
+
+			new Notice(`Updated daily note headings to ${value}`);
 		}
-
-		return lines.join("\n");
 	}
 
 	// ------------------------------------------------------------------------
