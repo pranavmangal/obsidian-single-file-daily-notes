@@ -2,7 +2,7 @@
 
 An Obsidian plugin for creating and managing daily notes in a single file.
 
-<img width="755" alt="showcase" src="https://github.com/pranavmangal/obsidian-single-file-daily-notes/assets/46976109/aa344557-7e4c-4c66-a168-e440c47463c6">
+<img src='images/showcase.png' width='755'>
 
 ## Features
 
@@ -10,7 +10,7 @@ An Obsidian plugin for creating and managing daily notes in a single file.
 
 The plugin will create a new note for today automatically and select the dummy entry for immediate editing. If today's note already exists, it will try to position the cursor for appending/editing the existing note.
 
-<img width="500" alt="editing" src="https://github.com/pranavmangal/obsidian-single-file-daily-notes/assets/46976109/182b10f7-5360-454f-9879-4f6bbcd7f33f">
+<img src='images/editing.png' width='500'>
 
 The result is a single standard Markdown file:
 ```md
@@ -24,7 +24,8 @@ The result is a single standard Markdown file:
 
 ### See an outline view
 Since daily notes are formed by using standard Mardown headings, Obsidian's built-in outline view can be used to browse through them.
-<img width="890" alt="outline" src="https://github.com/pranavmangal/obsidian-single-file-daily-notes/assets/46976109/031a2bb2-2d14-4c69-ae26-a3708f55ec42">
+
+<img src='images/outline.png' width='890'>
 
 ### Configurability
 You are able to configure:
