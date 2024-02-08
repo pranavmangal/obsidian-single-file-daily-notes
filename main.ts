@@ -9,6 +9,7 @@ import {
 	TFile,
 	TFolder,
 	moment,
+	debounce,
 } from "obsidian";
 
 interface SingleFileDailyNotesSettings {
@@ -291,7 +292,7 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 					.setPlaceholder("Enter the heading type")
 					.setValue(this.plugin.settings.headingType.toString())
 					.onChange(
-						this.debounce(async (value: string) => {
+						debounce(async (value: string) => {
 							const headingRegex = /^h[1-6]$/;
 							if (!headingRegex.test(value)) {
 								new Notice(
@@ -305,7 +306,7 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 
 								this.updateHeadings(value);
 							}
-						}, 400)
+						}, 500)
 					)
 			);
 
@@ -361,22 +362,6 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 
 			new Notice(`Updated daily note headings to ${value}`);
 		}
-	}
-
-	// ------------------------------------------------------------------------
-
-	debounce(func: Function, wait: number) {
-		let timeout: ReturnType<typeof setTimeout>;
-
-		return function executedFunction(...args: any) {
-			const later = () => {
-				clearTimeout(timeout);
-				func(...args);
-			};
-
-			clearTimeout(timeout);
-			timeout = setTimeout(later, wait);
-		};
 	}
 }
 
