@@ -252,7 +252,6 @@ class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
-		containerEl.createEl("h2", { text: this.plugin.manifest.name });
 
 		new Setting(containerEl)
 			.setName("Name for daily notes file")
