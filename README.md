@@ -23,7 +23,7 @@ The result is a single standard Markdown file:
 ```
 
 ### See an outline view
-Since daily notes are formed by using standard Mardown headings, Obsidian's built-in outline view can be used to browse through them.
+Since daily notes are formed by using standard Markdown headings, Obsidian's built-in outline view can be used to browse through them.
 
 <img src='images/outline.png' width='890'>
 
