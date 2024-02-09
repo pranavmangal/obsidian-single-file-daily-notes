@@ -1,6 +1,6 @@
 # Single File Daily Notes
 
-An Obsidian plugin for creating and managing daily notes in a single file.
+An [Obsidian](https://obsidian.md) plugin for creating and managing daily notes in a single file.
 
 <img src='images/showcase.png' width='755'>
 
@@ -35,7 +35,10 @@ You are able to configure:
 -   The date format used for daily notes
 
 ## Installation
-Currently, the plugin can be installed via [BRAT](https://github.com/TfTHacker/obsidian42-brat)
+
+The plugin is available on the [official community plugins list](https://obsidian.md/plugins?id=single-file-daily-notes) maintained by Obsidian.
+
+Otherwise, the plugin can be installed via [BRAT](https://github.com/TfTHacker/obsidian42-brat).
 
 ## Usage
 -   Open the plugin settings to configure it to your preferences
