@@ -1,30 +1,25 @@
 import {
-	App,
 	MarkdownView,
 	Notice,
 	Plugin,
-	PluginSettingTab,
-	Setting,
 	TAbstractFile,
 	TFile,
 	TFolder,
 	moment,
-	debounce,
 } from "obsidian";
 
-interface SingleFileDailyNotesSettings {
-	noteName: string;
-	noteLocation: string;
-	headingType: string;
-	dateFormat: string;
-}
+import {
+	SingleFileDailyNotesSettingTab,
+	SingleFileDailyNotesSettings,
+} from "./settings";
+import { getDailyNotesFilePath, getHeadingLevel, getHeadingMd } from "./utils";
 
-const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = {
+const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = Object.freeze({
 	noteName: "Daily Notes",
 	noteLocation: "",
 	headingType: "h3",
 	dateFormat: "DD-MM-YYYY, dddd",
-};
+});
 
 const DEFAULT_DUMMY_ENTRY = "- entry";
 
@@ -240,152 +235,3 @@ export default class SingleFileDailyNotes extends Plugin {
 		await this.saveData(this.settings);
 	}
 }
-
-class SingleFileDailyNotesSettingTab extends PluginSettingTab {
-	plugin: SingleFileDailyNotes;
-
-	constructor(app: App, plugin: SingleFileDailyNotes) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName("Name for daily notes file")
-			.setDesc("Provide a custom name for the daily notes file")
-			.addText((text) =>
-				text
-					.setPlaceholder("Enter the file name")
-					.setValue(this.plugin.settings.noteName)
-					.onChange(async (value) => {
-						this.plugin.settings.noteName = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Location of daily notes file")
-			.setDesc(
-				"Provide a path where you want the daily notes file to live (leave empty for root)"
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("Enter the path")
-					.setValue(this.plugin.settings.noteLocation)
-					.onChange(async (value) => {
-						this.plugin.settings.noteLocation = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Heading type for daily note sections")
-			.setDesc(
-				"Provide the type of heading that should be used for a daily note section (h1 to h6)"
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("Enter the heading type")
-					.setValue(this.plugin.settings.headingType.toString())
-					.onChange(
-						debounce(async (value: string) => {
-							const headingRegex = /^h[1-6]$/;
-							if (!headingRegex.test(value)) {
-								new Notice(
-									`Invalid heading type entered: "${value}"` +
-										"\nPlease fix this in the plugin settings."
-								);
-								return;
-							} else {
-								this.plugin.settings.headingType = value;
-								await this.plugin.saveSettings();
-
-								this.updateHeadings(value);
-							}
-						}, 500)
-					)
-			);
-
-		const dateFormatSettingDescription = new DocumentFragment();
-		dateFormatSettingDescription.createEl("span", {
-			text: "Provide a custom ",
-		});
-		dateFormatSettingDescription.appendChild(
-			createEl("a", {
-				text: "moment.js compatible",
-				href: "https://momentjs.com/docs/#/parsing/string-format/",
-			})
-		);
-		dateFormatSettingDescription.appendText(
-			" format string for using a different date format"
-		);
-
-		new Setting(containerEl)
-			.setName("Date format for daily note headings")
-			.setDesc(dateFormatSettingDescription)
-			.addText((text) =>
-				text
-					.setPlaceholder("Enter the format string")
-					.setValue(this.plugin.settings.dateFormat)
-					.onChange(async (value) => {
-						this.plugin.settings.dateFormat = value;
-						await this.plugin.saveSettings();
-					})
-			);
-	}
-
-	updateHeadings(value: string) {
-		const filePath = getDailyNotesFilePath(this.plugin.settings);
-
-		let file = this.app.vault.getAbstractFileByPath(filePath);
-		if (file instanceof TFile) {
-			this.app.vault.process(file, (data) => {
-				let lines = data.split("\n");
-
-				const dateFormat = this.plugin.settings.dateFormat;
-				const dateHeadingRegex = /^(#{1,6}) (.*)/;
-				const newHeading = getHeadingMd(this.plugin.settings);
-
-				for (const [i, line] of lines.entries()) {
-					const match = dateHeadingRegex.exec(line);
-					if (match && moment(match[2], dateFormat, true).isValid()) {
-						lines[i] = line.replace(match[1], newHeading);
-					}
-				}
-
-				return lines.join("\n");
-			});
-
-			new Notice(`Updated daily note headings to ${value}`);
-		}
-	}
-}
-
-// Utility functions
-
-/**
- * Returns the path for the daily notes file for the given settings
- * @param settings
- * @returns string - the path of the daily notes file
- */
-const getDailyNotesFilePath = (settings: SingleFileDailyNotesSettings) => {
-	const file = settings.noteName + ".md";
-
-	if (settings.noteLocation == "") {
-		return file;
-	} else {
-		return settings.noteLocation + "/" + file;
-	}
-};
-
-const getHeadingLevel = (settings: SingleFileDailyNotesSettings) => {
-	return parseInt(settings.headingType[1]);
-};
-
-const getHeadingMd = (settings: SingleFileDailyNotesSettings) => {
-	return "#".repeat(getHeadingLevel(settings));
-};
