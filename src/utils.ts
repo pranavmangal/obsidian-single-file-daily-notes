@@ -6,21 +6,21 @@ import { SingleFileDailyNotesSettings } from "./settings";
  * @returns string - the path of the daily notes file
  */
 export const getDailyNotesFilePath = (
-	settings: SingleFileDailyNotesSettings
+    settings: SingleFileDailyNotesSettings
 ) => {
-	const file = settings.noteName + ".md";
+    const file = settings.noteName + ".md";
 
-	if (settings.noteLocation == "") {
-		return file;
-	} else {
-		return settings.noteLocation + "/" + file;
-	}
+    if (settings.noteLocation == "") {
+        return file;
+    } else {
+        return settings.noteLocation + "/" + file;
+    }
 };
 
 export const getHeadingLevel = (settings: SingleFileDailyNotesSettings) => {
-	return parseInt(settings.headingType[1]);
+    return parseInt(settings.headingType[1]);
 };
 
 export const getHeadingMd = (settings: SingleFileDailyNotesSettings) => {
-	return "#".repeat(getHeadingLevel(settings));
+    return "#".repeat(getHeadingLevel(settings));
 };
