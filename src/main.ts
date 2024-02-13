@@ -57,7 +57,7 @@ export default class SingleFileDailyNotes extends Plugin {
 
         this.registerView(
             VIEW_TYPE_CALENDAR,
-            (leaf: WorkspaceLeaf) => (this.view = new CalendarView(leaf))
+            (leaf: WorkspaceLeaf) => (this.view = new CalendarView(leaf)),
         );
 
         if (this.app.workspace.layoutReady) {
@@ -148,7 +148,7 @@ export default class SingleFileDailyNotes extends Plugin {
                 // Select the dummy entry
                 view.editor.setSelection(
                     { line: i, ch: 2 },
-                    { line: i, ch: lines[i].length }
+                    { line: i, ch: lines[i].length },
                 );
             } else {
                 // Move cursor to the end of today's section
@@ -169,7 +169,7 @@ export default class SingleFileDailyNotes extends Plugin {
     async openOrCreateDailyNotesFile() {
         if (this.settings.noteName == "") {
             new Notice(
-                "Daily notes file name cannot be empty. Change this in the plugin settings."
+                "Daily notes file name cannot be empty. Change this in the plugin settings.",
             );
             return;
         }
@@ -208,7 +208,7 @@ export default class SingleFileDailyNotes extends Plugin {
 
         const todayHeading = this.getTodayHeading();
         const hasTodaySection = lines.some((line) =>
-            line.startsWith(todayHeading)
+            line.startsWith(todayHeading),
         );
 
         if (!hasTodaySection) {
@@ -265,7 +265,7 @@ export default class SingleFileDailyNotes extends Plugin {
         this.settings = Object.assign(
             {},
             DEFAULT_SETTINGS,
-            await this.loadData()
+            await this.loadData(),
         );
     }
 

@@ -6,7 +6,7 @@ import { SingleFileDailyNotesSettings } from "./settings";
  * @returns string - the path of the daily notes file
  */
 export const getDailyNotesFilePath = (
-    settings: SingleFileDailyNotesSettings
+    settings: SingleFileDailyNotesSettings,
 ) => {
     const file = settings.noteName + ".md";
 

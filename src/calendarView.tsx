@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 
 import React, { StrictMode } from "react";
-import { Root, createRoot } from "react-dom/client";
+import { createRoot, Root } from "react-dom/client";
 
 import Calendar from "./ui/calendar";
 import { VIEW_TYPE_CALENDAR } from "./constants";
@@ -30,7 +30,7 @@ export class CalendarView extends ItemView {
         this.root.render(
             <StrictMode>
                 <Calendar />
-            </StrictMode>
+            </StrictMode>,
         );
     }
 

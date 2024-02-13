@@ -41,13 +41,13 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.noteName = value;
                         await this.plugin.saveSettings();
-                    })
+                    }),
             );
 
         new Setting(containerEl)
             .setName("Location of daily notes file")
             .setDesc(
-                "Provide a path where you want the daily notes file to live (leave empty for root)"
+                "Provide a path where you want the daily notes file to live (leave empty for root)",
             )
             .addText((text) =>
                 text
@@ -56,13 +56,13 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.noteLocation = value;
                         await this.plugin.saveSettings();
-                    })
+                    }),
             );
 
         new Setting(containerEl)
             .setName("Heading type for daily note sections")
             .setDesc(
-                "Provide the type of heading that should be used for a daily note section (h1 to h6)"
+                "Provide the type of heading that should be used for a daily note section (h1 to h6)",
             )
             .addText((text) =>
                 text
@@ -74,7 +74,7 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
                             if (!headingRegex.test(value)) {
                                 new Notice(
                                     `Invalid heading type entered: "${value}"` +
-                                        "\nPlease fix this in the plugin settings."
+                                        "\nPlease fix this in the plugin settings.",
                                 );
                                 return;
                             } else {
@@ -83,8 +83,8 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
 
                                 this.updateHeadings(value);
                             }
-                        }, 500)
-                    )
+                        }, 500),
+                    ),
             );
 
         const dateFormatSettingDescription = new DocumentFragment();
@@ -95,10 +95,10 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
             createEl("a", {
                 text: "moment.js compatible",
                 href: "https://momentjs.com/docs/#/parsing/string-format/",
-            })
+            }),
         );
         dateFormatSettingDescription.appendText(
-            " format string for using a different date format"
+            " format string for using a different date format",
         );
 
         new Setting(containerEl)
@@ -111,7 +111,7 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.dateFormat = value;
                         await this.plugin.saveSettings();
-                    })
+                    }),
             );
     }
 
