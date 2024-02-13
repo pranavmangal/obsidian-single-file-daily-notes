@@ -5,6 +5,7 @@ import {
 	TAbstractFile,
 	TFile,
 	TFolder,
+	WorkspaceLeaf,
 	moment,
 } from "obsidian";
 
@@ -13,6 +14,8 @@ import {
 	SingleFileDailyNotesSettings,
 } from "./settings";
 import { getDailyNotesFilePath, getHeadingLevel, getHeadingMd } from "./utils";
+import { VIEW_TYPE_CALENDAR } from "./constants";
+import { CalendarView } from "./calendarView";
 
 const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = Object.freeze({
 	noteName: "Daily Notes",
@@ -25,14 +28,13 @@ const DEFAULT_DUMMY_ENTRY = "- entry";
 
 export default class SingleFileDailyNotes extends Plugin {
 	settings: SingleFileDailyNotesSettings;
+	view: CalendarView;
 
 	async onload() {
 		await this.loadSettings();
 
 		this.addSettingTab(new SingleFileDailyNotesSettingTab(this.app, this));
 
-		// --------------------------------------------------------------------
-		// Add command palette action to open/create daily notes file
 		this.addCommand({
 			id: "open-daily-notes",
 			name: "Open daily notes",
@@ -41,18 +43,50 @@ export default class SingleFileDailyNotes extends Plugin {
 			},
 		});
 
-		// --------------------------------------------------------------------
-		// Add ribbon button to open/create daily notes file
+		this.addCommand({
+			id: "show-calendar-view",
+			name: "Show calendar",
+			callback: () => {
+				this.activateView();
+			},
+		});
+
 		this.addRibbonIcon("calendar-days", "Open daily notes", () => {
 			this.openOrCreateDailyNotesFile();
 		});
 
-		// --------------------------------------------------------------------
-		// Add file open listener for updating daily notes file
-		this.app.workspace.on("file-open", this.onFileOpen.bind(this));
+		this.registerView(
+			VIEW_TYPE_CALENDAR,
+			(leaf: WorkspaceLeaf) => (this.view = new CalendarView(leaf))
+		);
 
-		// Add rename listener for updating settings
+		if (this.app.workspace.layoutReady) {
+			this.activateView();
+		}
+
+		// --------------------------------------------------------------------
+		this.app.workspace.on("file-open", this.onFileOpen.bind(this));
 		this.app.vault.on("rename", this.onRename.bind(this));
+	}
+
+	async activateView() {
+		const { workspace } = this.app;
+
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
+
+		if (leaves.length > 0) {
+			// A leaf with our view already exists, use that
+			leaf = leaves[0];
+		} else {
+			// Our view could not be found in the workspace, create a new leaf
+			// in the right sidebar for it
+			leaf = workspace.getRightLeaf(false);
+			await leaf.setViewState({ type: VIEW_TYPE_CALENDAR, active: true });
+		}
+
+		// "Reveal" the leaf in case it is in a collapsed sidebar
+		workspace.revealLeaf(leaf);
 	}
 
 	// ------------------------------------------------------------------------
@@ -217,6 +251,10 @@ export default class SingleFileDailyNotes extends Plugin {
 	// ------------------------------------------------------------------------
 
 	onunload() {
+		this.app.workspace
+			.getLeavesOfType(VIEW_TYPE_CALENDAR)
+			.forEach((leaf) => leaf.detach());
+
 		this.app.workspace.off("file-open", this.onFileOpen);
 		this.app.vault.off("rename", this.onRename);
 	}
