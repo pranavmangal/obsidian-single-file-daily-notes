@@ -1,17 +1,17 @@
 import {
     MarkdownView,
+    moment,
     Notice,
     Plugin,
     TAbstractFile,
     TFile,
     TFolder,
     WorkspaceLeaf,
-    moment,
 } from "obsidian";
 
 import {
-    SingleFileDailyNotesSettingTab,
     SingleFileDailyNotesSettings,
+    SingleFileDailyNotesSettingTab,
 } from "./settings";
 import { getDailyNotesFilePath, getHeadingLevel, getHeadingMd } from "./utils";
 import { VIEW_TYPE_CALENDAR } from "./constants";
@@ -72,7 +72,7 @@ export default class SingleFileDailyNotes extends Plugin {
     async activateView() {
         const { workspace } = this.app;
 
-        let leaf: WorkspaceLeaf | null = null;
+        let leaf: WorkspaceLeaf | null;
         const leaves = workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
 
         if (leaves.length > 0) {
