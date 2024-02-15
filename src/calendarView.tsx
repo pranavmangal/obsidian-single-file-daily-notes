@@ -1,6 +1,6 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { App, ItemView, WorkspaceLeaf } from "obsidian";
 
-import React, { StrictMode } from "react";
+import React, { createContext, StrictMode, useContext } from "react";
 import { createRoot, Root } from "react-dom/client";
 
 import Calendar from "./ui/calendar";
@@ -28,9 +28,16 @@ export class CalendarView extends ItemView {
     async onOpen() {
         this.root = createRoot(this.containerEl.children[1]);
         this.root.render(
-            <StrictMode>
-                <Calendar />
-            </StrictMode>,
+            <AppContext.Provider value={this.app}>
+                <StrictMode>
+                    <Calendar
+                        onClickDay={(date) => {
+                            console.log(date.format("YYYY-MM-DD"));
+                            return true;
+                        }}
+                    />
+                </StrictMode>
+            </AppContext.Provider>,
         );
     }
 
@@ -38,3 +45,8 @@ export class CalendarView extends ItemView {
         this.root?.unmount();
     }
 }
+
+const AppContext = createContext<App | undefined>(undefined);
+export const useApp = (): App | undefined => {
+    return useContext(AppContext);
+};

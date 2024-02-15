@@ -1,43 +1,86 @@
-import React, { StrictMode, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Moment } from "moment";
+import cx from "classnames";
 
-export default function Calendar() {
-    const [date, setDate] = useState(window.moment());
+import { ChevronLeft, ChevronRight, Dot } from "./components";
+
+export default function Calendar({
+    onClickDay,
+}: {
+    onClickDay: (date: Moment) => any;
+}) {
+    const [date, setDate] = useState(today());
 
     const monthDates = getMonthWeeks(date);
 
+    const handleKeyPress = (event: KeyboardEvent) => {
+        console.log(`Key pressed: ${event.key}`);
+        switch (event.key) {
+            case "ArrowLeft":
+                setDate(prevMonth(date));
+                break;
+            case "ArrowRight":
+                setDate(nextMonth(date));
+                break;
+            case "ArrowUp":
+                setDate(prevYear(date));
+                break;
+            case "ArrowDown":
+                setDate(nextYear(date));
+                break;
+            case " ":
+                setDate(today());
+                break;
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener("keydown", handleKeyPress);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyPress);
+        };
+    }, [handleKeyPress]);
+
     return (
-        <StrictMode>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button
-                    onClick={() => setDate(date.clone().subtract(1, "month"))}
-                >
-                    Previous
-                </button>
-                <button onClick={() => setDate(window.moment())}>Today</button>
-                <button onClick={() => setDate(date.clone().add(1, "month"))}>
-                    Next
-                </button>
+        <div id="calendar">
+            <div className="month-and-nav">
+                <h3>{date.format("MMM YYYY")}</h3>
+                <Navigation date={date} setDate={setDate} />
             </div>
-            <h3>{date.format("MMMM YYYY")}</h3>
-            <table style={{ borderCollapse: "collapse", width: "100%" }}>
+            <table>
                 <Columns week={monthDates[1]} />
-                <TableHeader />
-                <tbody>
-                    {monthDates.map((week, index) => (
-                        <tr key={index}>
-                            {week.map((day, index) => (
-                                <Day
-                                    key={index}
-                                    date={day}
-                                    month={date.month()}
-                                />
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
+                <DayNames />
+                <MonthDates
+                    monthDates={monthDates}
+                    date={date}
+                    onClickDay={onClickDay}
+                />
             </table>
-        </StrictMode>
+        </div>
+    );
+}
+
+function Navigation({
+    date,
+    setDate,
+}: {
+    date: Moment;
+    setDate: Dispatch<SetStateAction<Moment>>;
+}) {
+    return (
+        <div className="nav">
+            <ChevronLeft
+                className="nav-button"
+                onClick={() => setDate(prevMonth(date))}
+            />
+
+            <Dot className="nav-button" onClick={() => setDate(today())} />
+            <ChevronRight
+                className="nav-button"
+                onClick={() => setDate(nextMonth(date))}
+            />
+        </div>
     );
 }
 
@@ -47,49 +90,99 @@ function Columns({ week }: { week: Moment[] }) {
             {week.map((date, index) => (
                 <col
                     key={index}
-                    style={{
-                        backgroundColor: isWeekend(date) ? "lightgray" : "",
-                    }}
+                    className={isWeekend(date) ? "weekend" : undefined}
                 />
             ))}
         </colgroup>
     );
 }
 
-function TableHeader() {
+function DayNames() {
     const weekDayNames = window.moment.weekdaysShort(true);
 
     return (
         <thead>
             <tr>
                 {weekDayNames.map((day, index) => (
-                    <th key={index} style={{ textAlign: "center" }}>
-                        {day}
-                    </th>
+                    <th key={index}>{day}</th>
                 ))}
             </tr>
         </thead>
     );
 }
 
-function Day({ date, month }: { date: Moment; month: number }) {
+function MonthDates({
+    monthDates,
+    date,
+    onClickDay,
+}: {
+    monthDates: Moment[][];
+    date: Moment;
+    onClickDay: (date: Moment) => any;
+}) {
     return (
-        <td
-            style={{
-                textAlign: "center",
-                fontWeight: date.isSame(window.moment(), "day")
-                    ? "bold"
-                    : "normal",
-                color: date.month() === month ? "black" : "gray",
-            }}
-            onClick={() => console.log(date.format("DD-MM-YYYY"))}
-        >
-            {date.format("D")}
+        <tbody>
+            {monthDates.map((week, index) => (
+                <tr key={index}>
+                    {week.map((day, index) => (
+                        <Day
+                            key={index}
+                            date={day}
+                            month={date.month()}
+                            onClick={onClickDay}
+                        />
+                    ))}
+                </tr>
+            ))}
+        </tbody>
+    );
+}
+
+function Day({
+    date,
+    month,
+    onClick,
+}: {
+    date: Moment;
+    month: number;
+    onClick: (date: Moment) => any;
+}) {
+    return (
+        <td>
+            <div
+                className={cx("day", {
+                    today: date.isSame(today(), "day"),
+                    "adjacent-month": date.month() !== month,
+                })}
+                onClick={() => onClick(date)}
+            >
+                {date.format("D")}
+            </div>
         </td>
     );
 }
 
-function isWeekend(day: Moment): boolean {
+function today(): Moment {
+    return window.moment();
+}
+
+export function nextMonth(date: Moment): Moment {
+    return date.clone().add(1, "month");
+}
+
+export function prevMonth(date: Moment): Moment {
+    return date.clone().subtract(1, "month");
+}
+
+export function nextYear(date: Moment): Moment {
+    return date.clone().add(1, "year");
+}
+
+export function prevYear(date: Moment): Moment {
+    return date.clone().subtract(1, "year");
+}
+
+export function isWeekend(day: Moment): boolean {
     return day.isoWeekday() === 6 || day.isoWeekday() === 7;
 }
 
