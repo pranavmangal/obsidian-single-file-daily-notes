@@ -1,8 +1,90 @@
-/*
+#calendar {
+    --color-background-heading: transparent;
+    --color-background-day: transparent;
+    --color-background-today: transparent;
+    --color-background-weekend: color-mix(in srgb, var(--text-normal) 10%, transparent);
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+    --color-button: var(--text-muted);
 
-If your plugin does not need CSS, delete this file.
+    --color-text-title: var(--text-normal);
+    --color-text-heading: var(--text-muted);
+    --color-text-day: var(--text-normal);
+    --color-text-today: var(--interactive-accent);
+}
 
-*/
+.month-and-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+}
+
+.nav-button {
+    border: none;
+    padding: 0;
+    border-radius: 4px;
+    color: var(--color-button);
+    cursor: pointer;
+    transition: background-color 0.1s ease-in, color 0.1s ease-in;
+}
+
+.nav-button:hover {
+    background-color: color-mix(in srgb, var(--text-normal) 10%, transparent);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: var(--color-background-heading);
+    color: var(--color-text-heading);
+    font-size: 0.6em;
+    letter-spacing: 1px;
+    padding: 4px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.weekend {
+    background-color: var(--color-background-weekend);
+}
+
+.day {
+    background-color: var(--color-background-day);
+    color: var(--color-text-day);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    height: 100%;
+    padding: 6px;
+    margin: 2px;
+    position: relative;
+    text-align: center;
+    transition: background-color 0.1s ease-in, color 0.1s ease-in;
+    vertical-align: baseline;
+}
+
+.day:hover {
+    background-color: color-mix(in srgb, var(--text-normal) 10%, transparent);
+}
+
+.today {
+    color: var(--color-text-today);
+    background-color: var(--color-background-today);
+    font-weight: bold;
+}
+
+.day:active {
+    color: var(--text-on-accent);
+    background-color: var(--interactive-accent);
+}
+
+.adjacent-month {
+    color: color-mix(in srgb, var(--color-text-day) 35%, transparent)
+}
