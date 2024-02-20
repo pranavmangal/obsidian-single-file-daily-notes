@@ -11,14 +11,21 @@ import {
 import type SingleFileDailyNotes from "./main";
 import { getDailyNotesFilePath, getHeadingMd } from "./utils";
 
-export interface SingleFileDailyNotesSettings {
+export interface PluginSettings {
     noteName: string;
     noteLocation: string;
     headingType: string;
     dateFormat: string;
 }
 
-export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
+export const DEFAULT_SETTINGS: PluginSettings = Object.freeze({
+    noteName: "Daily Notes",
+    noteLocation: "",
+    headingType: "h3",
+    dateFormat: "DD-MM-YYYY, dddd",
+});
+
+export class SettingsTab extends PluginSettingTab {
     plugin: SingleFileDailyNotes;
 
     constructor(app: App, plugin: SingleFileDailyNotes) {
@@ -27,11 +34,16 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
     }
 
     display(): void {
-        const { containerEl } = this;
+        this.containerEl.empty();
 
-        containerEl.empty();
+        this.fileNameSetting();
+        this.filePathSetting();
+        this.headingTypeSetting();
+        this.dateFormatSetting();
+    }
 
-        new Setting(containerEl)
+    private fileNameSetting() {
+        new Setting(this.containerEl)
             .setName("Name for daily notes file")
             .setDesc("Provide a custom name for the daily notes file")
             .addText((text) =>
@@ -43,8 +55,10 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     }),
             );
+    }
 
-        new Setting(containerEl)
+    private filePathSetting() {
+        new Setting(this.containerEl)
             .setName("Location of daily notes file")
             .setDesc(
                 "Provide a path where you want the daily notes file to live (leave empty for root)",
@@ -58,8 +72,10 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     }),
             );
+    }
 
-        new Setting(containerEl)
+    private headingTypeSetting() {
+        new Setting(this.containerEl)
             .setName("Heading type for daily note sections")
             .setDesc(
                 "Provide the type of heading that should be used for a daily note section (h1 to h6)",
@@ -86,7 +102,9 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
                         }, 500),
                     ),
             );
+    }
 
+    private dateFormatSetting() {
         const dateFormatSettingDescription = new DocumentFragment();
         dateFormatSettingDescription.createEl("span", {
             text: "Provide a custom ",
@@ -101,7 +119,7 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
             " format string for using a different date format",
         );
 
-        new Setting(containerEl)
+        new Setting(this.containerEl)
             .setName("Date format for daily note headings")
             .setDesc(dateFormatSettingDescription)
             .addText((text) =>
@@ -115,7 +133,7 @@ export class SingleFileDailyNotesSettingTab extends PluginSettingTab {
             );
     }
 
-    updateHeadings(value: string) {
+    private updateHeadings(value: string) {
         const filePath = getDailyNotesFilePath(this.plugin.settings);
 
         const file = this.app.vault.getAbstractFileByPath(filePath);

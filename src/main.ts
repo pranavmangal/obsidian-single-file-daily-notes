@@ -1,39 +1,34 @@
 import {
     MarkdownView,
-    moment,
     Notice,
     Plugin,
     TAbstractFile,
     TFile,
     TFolder,
     WorkspaceLeaf,
+    moment,
 } from "obsidian";
 
-import {
-    SingleFileDailyNotesSettings,
-    SingleFileDailyNotesSettingTab,
-} from "./settings";
-import { getDailyNotesFilePath, getHeadingLevel, getHeadingMd } from "./utils";
+import { DEFAULT_SETTINGS, PluginSettings, SettingsTab } from "./settings";
 import { VIEW_TYPE_CALENDAR } from "./constants";
 import { CalendarView } from "./calendarView";
-
-const DEFAULT_SETTINGS: SingleFileDailyNotesSettings = Object.freeze({
-    noteName: "Daily Notes",
-    noteLocation: "",
-    headingType: "h3",
-    dateFormat: "DD-MM-YYYY, dddd",
-});
+import {
+    getDailyNotesFilePath,
+    getHeadingLevel,
+    getHeadingMd,
+    getTodayHeading,
+} from "./utils";
 
 const DEFAULT_DUMMY_ENTRY = "- entry";
 
 export default class SingleFileDailyNotes extends Plugin {
-    settings: SingleFileDailyNotesSettings;
+    settings: PluginSettings;
     view: CalendarView;
 
     async onload() {
         await this.loadSettings();
 
-        this.addSettingTab(new SingleFileDailyNotesSettingTab(this.app, this));
+        this.addSettingTab(new SettingsTab(this.app, this));
 
         this.addCommand({
             id: "open-daily-notes",
@@ -137,7 +132,7 @@ export default class SingleFileDailyNotes extends Plugin {
 
             // Skip to today's section
             let i = 0;
-            while (!lines[i].startsWith(this.getTodayHeading())) {
+            while (!lines[i].startsWith(getTodayHeading(this.settings))) {
                 i++;
             }
 
@@ -201,12 +196,12 @@ export default class SingleFileDailyNotes extends Plugin {
     /**
      * Returns updated daily notes file
      * @param data - current daily notes file
-     * @returns upated daily notes file
+     * @returns updated daily notes file
      */
     updatedNote(data: string): string {
         const lines = data.split("\n");
 
-        const todayHeading = this.getTodayHeading();
+        const todayHeading = getTodayHeading(this.settings);
         const hasTodaySection = lines.some((line) =>
             line.startsWith(todayHeading),
         );
@@ -233,19 +228,6 @@ export default class SingleFileDailyNotes extends Plugin {
         }
 
         return data;
-    }
-
-    // ------------------------------------------------------------------------
-
-    /**
-     * Generates the heading for a daily note section with today's date
-     */
-    getTodayHeading(): string {
-        return (
-            getHeadingMd(this.settings) +
-            " " +
-            moment().format(this.settings.dateFormat)
-        );
     }
 
     // ------------------------------------------------------------------------
