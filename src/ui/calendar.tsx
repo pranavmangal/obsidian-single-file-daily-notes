@@ -5,9 +5,9 @@ import cx from "classnames";
 import { ChevronLeft, ChevronRight, Dot } from "./components";
 
 export default function Calendar({
-    onClickDay,
+    onClickDate,
 }: {
-    onClickDay: (date: Moment) => any;
+    onClickDate: (date: Moment) => any;
 }) {
     const [date, setDate] = useState(today());
 
@@ -54,7 +54,7 @@ export default function Calendar({
                 <MonthDates
                     monthDates={monthDates}
                     date={date}
-                    onClickDay={onClickDay}
+                    onClickDay={onClickDate}
                 />
             </table>
         </div>

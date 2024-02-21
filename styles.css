@@ -88,3 +88,9 @@ th {
 .adjacent-month {
     color: color-mix(in srgb, var(--color-text-day) 35%, transparent)
 }
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}

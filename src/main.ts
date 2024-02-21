@@ -52,7 +52,7 @@ export default class SingleFileDailyNotes extends Plugin {
 
         this.registerView(
             VIEW_TYPE_CALENDAR,
-            (leaf: WorkspaceLeaf) => (this.view = new CalendarView(leaf)),
+            (leaf: WorkspaceLeaf) => (this.view = new CalendarView(leaf, this)),
         );
 
         if (this.app.workspace.layoutReady) {
