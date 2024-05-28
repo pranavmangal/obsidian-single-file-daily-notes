@@ -2,7 +2,7 @@ import React from "react";
 
 export function ChevronLeft({ ...props }) {
     return (
-        <div {...props}>
+        <div {...props} aria-label="Previous Month">
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -23,7 +23,7 @@ export function ChevronLeft({ ...props }) {
 
 export function ChevronRight({ ...props }) {
     return (
-        <div {...props}>
+        <div {...props} aria-label="Next Month">
             <svg
                 {...props}
                 xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@ export function ChevronRight({ ...props }) {
 
 export function Dot({ ...props }) {
     return (
-        <div {...props}>
+        <div {...props} aria-label="Today">
             <svg
                 {...props}
                 xmlns="http://www.w3.org/2000/svg"

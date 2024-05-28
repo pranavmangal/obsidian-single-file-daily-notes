@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { Moment } from "moment";
 import cx from "classnames";
 
@@ -7,40 +7,10 @@ import { ChevronLeft, ChevronRight, Dot } from "./components";
 export default function Calendar({
     onClickDate,
 }: {
-    onClickDate: (date: Moment) => any;
+    onClickDate: (date: Moment) => void;
 }) {
     const [date, setDate] = useState(today());
-
     const monthDates = getMonthWeeks(date);
-
-    const handleKeyPress = (event: KeyboardEvent) => {
-        console.log(`Key pressed: ${event.key}`);
-        switch (event.key) {
-            case "ArrowLeft":
-                setDate(prevMonth(date));
-                break;
-            case "ArrowRight":
-                setDate(nextMonth(date));
-                break;
-            case "ArrowUp":
-                setDate(prevYear(date));
-                break;
-            case "ArrowDown":
-                setDate(nextYear(date));
-                break;
-            case " ":
-                setDate(today());
-                break;
-        }
-    };
-
-    useEffect(() => {
-        document.addEventListener("keydown", handleKeyPress);
-
-        return () => {
-            document.removeEventListener("keydown", handleKeyPress);
-        };
-    }, [handleKeyPress]);
 
     return (
         <div id="calendar">
@@ -54,7 +24,7 @@ export default function Calendar({
                 <MonthDates
                     monthDates={monthDates}
                     date={date}
-                    onClickDay={onClickDate}
+                    onClickDate={onClickDate}
                 />
             </table>
         </div>
@@ -114,11 +84,11 @@ function DayNames() {
 function MonthDates({
     monthDates,
     date,
-    onClickDay,
+    onClickDate,
 }: {
     monthDates: Moment[][];
     date: Moment;
-    onClickDay: (date: Moment) => any;
+    onClickDate: (date: Moment) => void;
 }) {
     return (
         <tbody>
@@ -129,7 +99,7 @@ function MonthDates({
                             key={index}
                             date={day}
                             month={date.month()}
-                            onClick={onClickDay}
+                            onClick={onClickDate}
                         />
                     ))}
                 </tr>
@@ -145,7 +115,7 @@ function Day({
 }: {
     date: Moment;
     month: number;
-    onClick: (date: Moment) => any;
+    onClick: (date: Moment) => void;
 }) {
     return (
         <td>
