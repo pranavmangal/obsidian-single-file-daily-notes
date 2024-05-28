@@ -103,20 +103,24 @@ export default class SingleFileDailyNotes extends Plugin {
      * @param oldPath - old path of renamed entity
      */
     async onRename(file: TAbstractFile, oldPath: string) {
-        const currentPath = getDailyNotesFilePath(this.settings);
+        const { settings } = this;
+
+        const currentPath = getDailyNotesFilePath(settings);
 
         if (file instanceof TFile && oldPath == currentPath) {
-            this.settings.noteName = file.basename;
+            settings.noteName = file.basename;
         }
 
         if (file instanceof TFolder && currentPath.startsWith(oldPath)) {
             const newPath = file.path + currentPath.substring(oldPath.length);
             const justPath = newPath.substring(0, newPath.lastIndexOf("/"));
-            this.settings.noteLocation = justPath;
+            settings.noteLocation = justPath;
         }
 
         await this.saveSettings();
     }
+
+    skipCursorPositioning = false;
 
     /**
      * Updates the daily notes file if it is opened
@@ -125,7 +129,12 @@ export default class SingleFileDailyNotes extends Plugin {
     async onFileOpen(file: TFile) {
         if (file && file.path == getDailyNotesFilePath(this.settings)) {
             await this.updateDailyNote(file);
-            await this.positionCursor(file);
+
+            if (!this.skipCursorPositioning) {
+                await this.positionCursor(file);
+            } else {
+                this.skipCursorPositioning = false;
+            }
         }
     }
 
@@ -138,6 +147,8 @@ export default class SingleFileDailyNotes extends Plugin {
     async positionCursor(file: TFile) {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (view) {
+            await view.leaf.setViewState({ type: "markdown", active: true });
+
             const fileContent = await this.app.vault.read(file);
             const lines = fileContent.split("\n");
 
@@ -173,6 +184,8 @@ export default class SingleFileDailyNotes extends Plugin {
      * Opens daily notes file and creates one if it doesn't exist
      */
     async openOrCreateDailyNotesFile() {
+        const { vault, workspace } = this.app;
+
         if (this.settings.noteName == "") {
             new Notice(
                 "Daily notes file name cannot be empty. Change this in the plugin settings.",
@@ -182,13 +195,13 @@ export default class SingleFileDailyNotes extends Plugin {
 
         const filePath = getDailyNotesFilePath(this.settings);
 
-        let file = this.app.vault.getAbstractFileByPath(filePath);
+        let file = vault.getAbstractFileByPath(filePath);
         if (!file) {
-            file = await this.app.vault.create(filePath, "");
+            file = await vault.create(filePath, "");
         }
 
         if (file instanceof TFile) {
-            await this.app.workspace.getLeaf().openFile(file);
+            await workspace.getLeaf().openFile(file);
         }
     }
 

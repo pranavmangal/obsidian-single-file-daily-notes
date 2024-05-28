@@ -102,6 +102,8 @@ export class CalendarView extends ItemView {
     }
 
     async goToNote(file: TFile, index: number) {
+        this.plugin.skipCursorPositioning = true;
+
         const tab = await this.openDailyNotesTab(file);
         await this.scrollToNote(tab, index);
     }
@@ -115,7 +117,6 @@ export class CalendarView extends ItemView {
             await this.app.vault.process(file, (contents) => {
                 const fullNoteAndIndex = this.insertNoteForDate(date, contents);
                 index = fullNoteAndIndex[1];
-                console.log(index);
 
                 return fullNoteAndIndex[0];
             });
