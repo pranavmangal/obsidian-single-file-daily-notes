@@ -10,16 +10,14 @@ import {
 } from "obsidian";
 
 import { DEFAULT_SETTINGS, PluginSettings, SettingsTab } from "./settings";
-import { VIEW_TYPE_CALENDAR } from "./constants";
-import { CalendarView } from "./calendarView";
+import { DEFAULT_DUMMY_ENTRY, VIEW_TYPE_CALENDAR } from "./constants";
+import { CalendarView } from "./ui/calendarView";
 import {
     getDailyNotesFilePath,
     getHeadingLevel,
     getHeadingMd,
     getTodayHeading,
 } from "./utils";
-
-const DEFAULT_DUMMY_ENTRY = "- entry";
 
 export default class SingleFileDailyNotes extends Plugin {
     settings: PluginSettings;

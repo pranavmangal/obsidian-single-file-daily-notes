@@ -3,6 +3,7 @@ import {
     ItemView,
     MarkdownView,
     Modal,
+    moment,
     TFile,
     WorkspaceLeaf,
 } from "obsidian";
@@ -11,10 +12,11 @@ import { Moment } from "moment";
 import React, { createContext, StrictMode, useContext } from "react";
 import { createRoot, Root } from "react-dom/client";
 
-import SingleFileDailyNotes from "./main";
-import { VIEW_TYPE_CALENDAR } from "./constants";
-import Calendar from "./ui/calendar";
-import { getDailyNotesFile, getHeadingForDate } from "./utils";
+import SingleFileDailyNotes from "../main";
+import { DEFAULT_DUMMY_ENTRY, VIEW_TYPE_CALENDAR } from "../constants";
+import { getDailyNotesFile, getHeadingForDate, getHeadingMd } from "../utils";
+
+import Calendar from "./calendar";
 
 export class CalendarView extends ItemView {
     plugin: SingleFileDailyNotes;
@@ -58,7 +60,7 @@ export class CalendarView extends ItemView {
             const contents = await this.app.vault.read(file);
             const noteIndex = this.containsNoteForDate(contents, date);
 
-            if (!noteIndex) {
+            if (noteIndex == null) {
                 new CreateDailyNoteModal(
                     this.app,
                     date,
@@ -67,7 +69,7 @@ export class CalendarView extends ItemView {
 
                 return;
             } else {
-                await this.goToNoteFor(file, noteIndex);
+                await this.goToNote(file, noteIndex);
             }
         }
     }
@@ -99,9 +101,60 @@ export class CalendarView extends ItemView {
         }
     }
 
-    async goToNoteFor(file: TFile, index: number) {
+    async goToNote(file: TFile, index: number) {
         const tab = await this.openDailyNotesTab(file);
         await this.scrollToNote(tab, index);
+    }
+
+    async createNoteForDate(date: Moment) {
+        const file = getDailyNotesFile(this.app, this.plugin.settings);
+
+        if (file) {
+            let index = 0;
+
+            await this.app.vault.process(file, (contents) => {
+                const fullNoteAndIndex = this.insertNoteForDate(date, contents);
+                index = fullNoteAndIndex[1];
+                console.log(index);
+
+                return fullNoteAndIndex[0];
+            });
+
+            await this.goToNote(file, index);
+        }
+    }
+
+    private insertNoteForDate(
+        date: Moment,
+        contents: string,
+    ): [string, number] {
+        const { settings } = this.plugin;
+
+        const lines = contents.split("\n");
+        const note =
+            getHeadingForDate(settings, date) + "\n" + DEFAULT_DUMMY_ENTRY;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (!line.startsWith(getHeadingMd(settings))) continue;
+
+            const lineDate = moment(line.split(" ", 2)[1], settings.dateFormat);
+            if (!lineDate.isValid() || lineDate.isAfter(date)) continue;
+
+            if (lineDate.isBefore(date)) {
+                lines.splice(i, 0, note);
+                console.log(i);
+                return [lines.join("\n"), i];
+            }
+        }
+
+        // If no date is found, add it to the end of the file
+        lines.push(note);
+
+        lines.map((line, i) => console.log(i, line));
+        console.log(lines.length);
+
+        return [lines.join("\n"), lines.length];
     }
 
     containsNoteForDate(contents: string, date: Moment) {
@@ -113,16 +166,6 @@ export class CalendarView extends ItemView {
             return index;
         } else {
             return null;
-        }
-    }
-
-    async createNoteForDate(date: Moment) {
-        const file = getDailyNotesFile(this.app, this.plugin.settings);
-        // Create note at index
-        const index = 1;
-
-        if (file) {
-            await this.goToNoteFor(file, index);
         }
     }
 }
