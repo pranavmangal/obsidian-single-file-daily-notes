@@ -104,6 +104,32 @@ export class SettingsTab extends PluginSettingTab {
             );
     }
 
+    private updateHeadings(value: string) {
+        const filePath = getDailyNotesFilePath(this.plugin.settings);
+
+        const file = this.app.vault.getAbstractFileByPath(filePath);
+        if (file instanceof TFile) {
+            this.app.vault.process(file, (data) => {
+                const lines = data.split("\n");
+
+                const dateFormat = this.plugin.settings.dateFormat;
+                const dateHeadingRegex = /^(#{1,6}) (.*)/;
+                const newHeading = getHeadingMd(this.plugin.settings);
+
+                for (const [i, line] of lines.entries()) {
+                    const match = dateHeadingRegex.exec(line);
+                    if (match && moment(match[2], dateFormat, true).isValid()) {
+                        lines[i] = line.replace(match[1], newHeading);
+                    }
+                }
+
+                return lines.join("\n");
+            });
+
+            new Notice(`Updated daily note headings to ${value}`);
+        }
+    }
+
     private dateFormatSetting() {
         const dateFormatSettingDescription = new DocumentFragment();
         dateFormatSettingDescription.createEl("span", {
@@ -131,31 +157,5 @@ export class SettingsTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     }),
             );
-    }
-
-    private updateHeadings(value: string) {
-        const filePath = getDailyNotesFilePath(this.plugin.settings);
-
-        const file = this.app.vault.getAbstractFileByPath(filePath);
-        if (file instanceof TFile) {
-            this.app.vault.process(file, (data) => {
-                const lines = data.split("\n");
-
-                const dateFormat = this.plugin.settings.dateFormat;
-                const dateHeadingRegex = /^(#{1,6}) (.*)/;
-                const newHeading = getHeadingMd(this.plugin.settings);
-
-                for (const [i, line] of lines.entries()) {
-                    const match = dateHeadingRegex.exec(line);
-                    if (match && moment(match[2], dateFormat, true).isValid()) {
-                        lines[i] = line.replace(match[1], newHeading);
-                    }
-                }
-
-                return lines.join("\n");
-            });
-
-            new Notice(`Updated daily note headings to ${value}`);
-        }
     }
 }

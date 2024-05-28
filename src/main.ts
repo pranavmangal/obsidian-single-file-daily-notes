@@ -16,7 +16,9 @@ import {
     getDailyNotesFilePath,
     getHeadingLevel,
     getHeadingMd,
+    getMonthSection,
     getTodayHeading,
+    getTodaySection,
 } from "./utils";
 
 export default class SingleFileDailyNotes extends Plugin {
@@ -234,19 +236,10 @@ export default class SingleFileDailyNotes extends Plugin {
             let updatedFile = data;
 
             if (moment().date() == 1) {
-                const monthSection =
-                    "\n---\n" +
-                    "#".repeat(getHeadingLevel(this.settings) - 1) +
-                    " " +
-                    moment().subtract(1, "day").format("MMMM YYYY") +
-                    "\n";
-
-                updatedFile = monthSection + updatedFile;
+                updatedFile = getMonthSection(this.settings) + updatedFile;
             }
 
-            const todaySection =
-                todayHeading + "\n" + DEFAULT_DUMMY_ENTRY + "\n";
-            updatedFile = todaySection + updatedFile;
+            updatedFile = getTodaySection(this.settings) + updatedFile;
 
             return updatedFile;
         }

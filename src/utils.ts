@@ -2,11 +2,10 @@ import { App, moment, TFile } from "obsidian";
 import { Moment } from "moment";
 
 import { PluginSettings } from "./settings";
+import { DEFAULT_DUMMY_ENTRY } from "./constants";
 
 /**
- * Returns the path for the daily notes file for the given settings
- * @param settings
- * @returns string - the path of the daily notes file
+ * Returns the path for the daily notes file
  */
 export const getDailyNotesFilePath = (settings: PluginSettings) => {
     const file = settings.noteName + ".md";
@@ -18,6 +17,9 @@ export const getDailyNotesFilePath = (settings: PluginSettings) => {
     }
 };
 
+/**
+ * Returns the daily notes file
+ */
 export const getDailyNotesFile = (
     app: App,
     settings: PluginSettings,
@@ -32,14 +34,32 @@ export const getDailyNotesFile = (
     }
 };
 
-export const getHeadingLevel = (settings: PluginSettings) => {
+/**
+ * Returns the level of headingType from settings
+ * @example
+ * getHeadingLevel({headingType: "h3"})
+ * // Returns 3
+ */
+export const getHeadingLevel = (settings: PluginSettings): number => {
     return parseInt(settings.headingType[1]);
 };
 
-export const getHeadingMd = (settings: PluginSettings) => {
+/**
+ * Generates the Markdown for a heading
+ * @example
+ * getHeadingMd({headingType: "h3"})
+ * // Returns ###
+ */
+export const getHeadingMd = (settings: PluginSettings): string => {
     return "#".repeat(getHeadingLevel(settings));
 };
 
+/**
+ * Generates a daily note section heading for a date
+ * @example
+ * getHeadingForDate({headingType: "h3", dateFormat: "DD-MM-YYYY, dddd"}, date(29-05-24))
+ * // Returns ### 29-05-2024, Wednesday
+ */
 export const getHeadingForDate = (
     settings: PluginSettings,
     date: Moment,
@@ -47,6 +67,31 @@ export const getHeadingForDate = (
     return getHeadingMd(settings) + " " + date.format(settings.dateFormat);
 };
 
+/**
+ * Generates a daily note section heading for today.
+ *
+ * See {@link getHeadingForDate}
+ */
 export const getTodayHeading = (settings: PluginSettings): string => {
     return getHeadingForDate(settings, moment());
+};
+
+export const getTodaySection = (settings: PluginSettings): string => {
+    return (
+        getHeadingForDate(settings, moment()) +
+        "\n" +
+        DEFAULT_DUMMY_ENTRY +
+        "\n"
+    );
+};
+
+export const getMonthSection = (settings: PluginSettings): string => {
+    return (
+        "\n" +
+        "---\n" +
+        "#".repeat(getHeadingLevel(settings) - 1) +
+        " " +
+        moment().subtract(1, "day").format("MMMM YYYY") +
+        "\n"
+    );
 };

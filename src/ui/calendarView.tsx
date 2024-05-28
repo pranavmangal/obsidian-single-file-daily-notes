@@ -144,16 +144,12 @@ export class CalendarView extends ItemView {
 
             if (lineDate.isBefore(date)) {
                 lines.splice(i, 0, note);
-                console.log(i);
                 return [lines.join("\n"), i];
             }
         }
 
         // If no date is found, add it to the end of the file
         lines.push(note);
-
-        lines.map((line, i) => console.log(i, line));
-        console.log(lines.length);
 
         return [lines.join("\n"), lines.length];
     }
