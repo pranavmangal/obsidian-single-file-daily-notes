@@ -40,7 +40,15 @@ export default class SingleFileDailyNotes extends Plugin {
             id: "show-calendar-view",
             name: "Show calendar",
             callback: () => {
-                this.activateView();
+                this.showCalendar();
+            },
+        });
+
+        this.addCommand({
+            id: "hide-calendar-view",
+            name: "Hide calendar",
+            callback: () => {
+                this.hideCalendar();
             },
         });
 
@@ -54,7 +62,7 @@ export default class SingleFileDailyNotes extends Plugin {
         );
 
         if (this.app.workspace.layoutReady) {
-            this.activateView();
+            await this.showCalendar();
         }
 
         // --------------------------------------------------------------------
@@ -62,24 +70,29 @@ export default class SingleFileDailyNotes extends Plugin {
         this.app.vault.on("rename", this.onRename.bind(this));
     }
 
-    async activateView() {
+    async showCalendar() {
         const { workspace } = this.app;
 
         let leaf: WorkspaceLeaf | null;
         const leaves = workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
 
         if (leaves.length > 0) {
-            // A leaf with our view already exists, use that
             leaf = leaves[0];
         } else {
-            // Our view could not be found in the workspace, create a new leaf
-            // in the right sidebar for it
             leaf = workspace.getRightLeaf(false);
             await leaf.setViewState({ type: VIEW_TYPE_CALENDAR, active: true });
         }
 
-        // "Reveal" the leaf in case it is in a collapsed sidebar
         workspace.revealLeaf(leaf);
+    }
+
+    async hideCalendar() {
+        const { workspace } = this.app;
+
+        const leaves = workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
+        for (const leaf of leaves) {
+            leaf.detach();
+        }
     }
 
     // ------------------------------------------------------------------------
