@@ -1,3 +1,7 @@
+.workspace-leaf-content[data-type=calendar] .view-content {
+    padding: 16px !important;
+}
+
 #calendar {
     --color-background-heading: transparent;
     --color-background-day: transparent;
@@ -16,6 +20,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.month-and-nav {
+    margin: 0 0 12px 0;
+}
+
+.month-and-nav h3 {
+    margin: 0;
 }
 
 .nav {
