@@ -1,8 +1,10 @@
 # Single File Daily Notes
+[![GitHub Release](https://img.shields.io/github/v/release/pranavmangal/obsidian-single-file-daily-notes?sort=semver&style=for-the-badge&color=%2346A758)](https://github.com/pranavmangal/obsidian-single-file-daily-notes/releases/latest)
+![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2FHEAD%2Fcommunity-plugin-stats.json&query=%24%5B'single-file-daily-notes'%5D%5B'downloads'%5D&style=for-the-badge&logo=obsidian&label=Downloads&color=%23FFBA18)
 
 An [Obsidian](https://obsidian.md) plugin for creating and managing daily notes in a single file.
 
-<img src='images/showcase.png' width='755'>
+![Showcase](/images/showcase.png)
 
 ## Features
 
@@ -26,11 +28,19 @@ The result is a single standard Markdown file:
 -   Read a few more chapters of [[The Dark Forest]]
 ```
 
+### Use a calendar view
+
+This plugin has a built-in calendar view that is displayed in the sidebar. This can be used to quickly jump to the daily note for a chosen date, and create one if it does not exist.
+
+This calendar view can be shown/hidden using the command palette (`⌘ + P`).
+
+![Calendar View](/images/calendar-view.png)
+
 ### See an outline view
 
 Since daily notes are formed by using standard Markdown headings, Obsidian's built-in outline view can be used to browse through them.
 
-<img src='images/outline.png' width='890'>
+![Outline View](/images/outline-view.png)
 
 ### Configurability
 
