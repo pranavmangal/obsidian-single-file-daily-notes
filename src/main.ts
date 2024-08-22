@@ -10,11 +10,10 @@ import {
 } from "obsidian";
 
 import { DEFAULT_SETTINGS, PluginSettings, SettingsTab } from "./settings";
-import { DEFAULT_DUMMY_ENTRY, VIEW_TYPE_CALENDAR } from "./constants";
+import { VIEW_TYPE_CALENDAR } from "./constants";
 import { CalendarView } from "./ui/calendarView";
 import {
     getDailyNotesFilePath,
-    getHeadingLevel,
     getHeadingMd,
     getMonthSection,
     getTodayHeading,
@@ -163,7 +162,7 @@ export default class SingleFileDailyNotes extends Plugin {
             // Move to the first line of today's section
             i++;
 
-            if (lines[i] == DEFAULT_DUMMY_ENTRY) {
+            if (lines[i] == this.settings.noteEntry) {
                 // Select the dummy entry
                 view.editor.setSelection(
                     { line: i, ch: 2 },

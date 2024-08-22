@@ -9,10 +9,11 @@ import {
 } from "obsidian";
 
 import type SingleFileDailyNotes from "./main";
-import { getDailyNotesFilePath, getHeadingMd } from "./utils";
+import { getDailyNotesFile, getHeadingMd } from "./utils";
 
 export interface PluginSettings {
     noteName: string;
+    noteEntry: string;
     noteLocation: string;
     headingType: string;
     dateFormat: string;
@@ -20,6 +21,7 @@ export interface PluginSettings {
 
 export const DEFAULT_SETTINGS: PluginSettings = Object.freeze({
     noteName: "Daily Notes",
+    noteEntry: "- entry",
     noteLocation: "",
     headingType: "h3",
     dateFormat: "DD-MM-YYYY, dddd",
@@ -37,6 +39,7 @@ export class SettingsTab extends PluginSettingTab {
         this.containerEl.empty();
 
         this.fileNameSetting();
+        this.nodeEntrySetting();
         this.filePathSetting();
         this.headingTypeSetting();
         this.dateFormatSetting();
@@ -52,6 +55,23 @@ export class SettingsTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.noteName)
                     .onChange(async (value) => {
                         this.plugin.settings.noteName = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+    }
+
+    private nodeEntrySetting() {
+        new Setting(this.containerEl)
+            .setName("Default entry for daily note")
+            .setDesc(
+                "Provide a custom note entry for a newly created daily note",
+            )
+            .addText((text) =>
+                text
+                    .setPlaceholder("Enter the note")
+                    .setValue(this.plugin.settings.noteEntry)
+                    .onChange(async (value) => {
+                        this.plugin.settings.noteEntry = value;
                         await this.plugin.saveSettings();
                     }),
             );
@@ -105,9 +125,8 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     private updateHeadings(value: string) {
-        const filePath = getDailyNotesFilePath(this.plugin.settings);
+        const file = getDailyNotesFile(this.app, this.plugin.settings);
 
-        const file = this.app.vault.getAbstractFileByPath(filePath);
         if (file instanceof TFile) {
             this.app.vault.process(file, (data) => {
                 const lines = data.split("\n");

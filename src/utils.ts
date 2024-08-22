@@ -2,7 +2,6 @@ import { App, moment, TFile } from "obsidian";
 import { Moment } from "moment";
 
 import { PluginSettings } from "./settings";
-import { DEFAULT_DUMMY_ENTRY } from "./constants";
 
 /**
  * Returns the path for the daily notes file
@@ -78,10 +77,7 @@ export const getTodayHeading = (settings: PluginSettings): string => {
 
 export const getTodaySection = (settings: PluginSettings): string => {
     return (
-        getHeadingForDate(settings, moment()) +
-        "\n" +
-        DEFAULT_DUMMY_ENTRY +
-        "\n"
+        getHeadingForDate(settings, moment()) + "\n" + settings.noteEntry + "\n"
     );
 };
 

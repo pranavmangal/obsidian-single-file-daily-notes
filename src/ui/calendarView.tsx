@@ -13,7 +13,7 @@ import React, { createContext, StrictMode, useContext } from "react";
 import { createRoot, Root } from "react-dom/client";
 
 import SingleFileDailyNotes from "../main";
-import { DEFAULT_DUMMY_ENTRY, VIEW_TYPE_CALENDAR } from "../constants";
+import { VIEW_TYPE_CALENDAR } from "../constants";
 import { getDailyNotesFile, getHeadingForDate, getHeadingMd } from "../utils";
 
 import Calendar from "./calendar";
@@ -133,7 +133,7 @@ export class CalendarView extends ItemView {
 
         const lines = contents.split("\n");
         const note =
-            getHeadingForDate(settings, date) + "\n" + DEFAULT_DUMMY_ENTRY;
+            getHeadingForDate(settings, date) + "\n" + settings.noteEntry;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
