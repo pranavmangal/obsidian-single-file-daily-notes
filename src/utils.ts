@@ -2,7 +2,6 @@ import { App, moment, TFile } from "obsidian";
 import { Moment } from "moment";
 
 import { PluginSettings } from "./settings";
-import { FilePosition } from "./types";
 
 /**
  * Returns the path for the daily notes file
@@ -99,7 +98,7 @@ export const insertNoteForDate = (
     fileContent: string,
     date: moment.Moment,
     settings: PluginSettings,
-): [string, FilePosition] => {
+): [string, number] => {
     const lines = fileContent.split("\n");
 
     const headingMd = getHeadingMd(settings);
