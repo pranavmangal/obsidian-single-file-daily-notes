@@ -1,6 +1,6 @@
 {
     "name": "obsidian-single-file-daily-notes",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "An Obsidian plugin to create and manage daily notes in a single file.",
     "main": "main.js",
     "scripts": {
