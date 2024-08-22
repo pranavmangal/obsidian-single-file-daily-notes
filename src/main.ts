@@ -15,9 +15,8 @@ import { CalendarView } from "./ui/calendarView";
 import {
     getDailyNotesFilePath,
     getHeadingMd,
-    getMonthSection,
     getTodayHeading,
-    getTodaySection,
+    insertNoteForDate,
 } from "./utils";
 
 export default class SingleFileDailyNotes extends Plugin {
@@ -153,9 +152,11 @@ export default class SingleFileDailyNotes extends Plugin {
             const fileContent = await this.app.vault.read(file);
             const lines = fileContent.split("\n");
 
+            const todayHeading = getTodayHeading(this.settings);
+
             // Skip to today's section
             let i = 0;
-            while (!lines[i].startsWith(getTodayHeading(this.settings))) {
+            while (!lines[i].startsWith(todayHeading)) {
                 i++;
             }
 
@@ -170,7 +171,8 @@ export default class SingleFileDailyNotes extends Plugin {
                 );
             } else {
                 // Move cursor to the end of today's section
-                while (!lines[i].startsWith(getHeadingMd(this.settings))) {
+                const headingMd = getHeadingMd(this.settings);
+                while (!lines[i].startsWith(headingMd)) {
                     i++;
                 }
 
@@ -213,37 +215,15 @@ export default class SingleFileDailyNotes extends Plugin {
      * @param file - daily notes file to update
      */
     async updateDailyNote(file: TFile) {
-        return this.app.vault.process(file, (data) => {
-            return this.updatedNote(data);
+        return this.app.vault.process(file, (fileContent) => {
+            const [updatedNote] = insertNoteForDate(
+                fileContent,
+                moment(),
+                this.settings,
+            );
+
+            return updatedNote;
         });
-    }
-
-    /**
-     * Returns updated daily notes file
-     * @param data - current daily notes file
-     * @returns updated daily notes file
-     */
-    updatedNote(data: string): string {
-        const lines = data.split("\n");
-
-        const todayHeading = getTodayHeading(this.settings);
-        const hasTodaySection = lines.some((line) =>
-            line.startsWith(todayHeading),
-        );
-
-        if (!hasTodaySection) {
-            let updatedFile = data;
-
-            if (moment().date() == 1) {
-                updatedFile = getMonthSection(this.settings) + updatedFile;
-            }
-
-            updatedFile = getTodaySection(this.settings) + updatedFile;
-
-            return updatedFile;
-        }
-
-        return data;
     }
 
     // ------------------------------------------------------------------------

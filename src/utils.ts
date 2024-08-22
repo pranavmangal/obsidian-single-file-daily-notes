@@ -2,6 +2,7 @@ import { App, moment, TFile } from "obsidian";
 import { Moment } from "moment";
 
 import { PluginSettings } from "./settings";
+import { FilePosition } from "./types";
 
 /**
  * Returns the path for the daily notes file
@@ -75,19 +76,90 @@ export const getTodayHeading = (settings: PluginSettings): string => {
     return getHeadingForDate(settings, moment());
 };
 
-export const getTodaySection = (settings: PluginSettings): string => {
-    return (
-        getHeadingForDate(settings, moment()) + "\n" + settings.noteEntry + "\n"
-    );
+export const getSectionForDate = (
+    settings: PluginSettings,
+    date: Moment,
+): string => {
+    return getHeadingForDate(settings, date) + "\n" + settings.noteEntry;
 };
 
-export const getMonthSection = (settings: PluginSettings): string => {
-    return (
-        "\n" +
-        "---\n" +
+export const getSectionForMonth = (
+    settings: PluginSettings,
+    date: Moment,
+): string => {
+    const monthHeading =
         "#".repeat(getHeadingLevel(settings) - 1) +
         " " +
-        moment().subtract(1, "day").format("MMMM YYYY") +
-        "\n"
-    );
+        date.format("MMMM YYYY");
+
+    return "\n" + "---\n" + monthHeading;
+};
+
+export const insertNoteForDate = (
+    fileContent: string,
+    date: moment.Moment,
+    settings: PluginSettings,
+): [string, FilePosition] => {
+    const lines = fileContent.split("\n");
+
+    const headingMd = getHeadingMd(settings);
+    let note = getSectionForDate(settings, date);
+    let encounteredLaterDate = false;
+
+    // Offset start index if properties are present
+    let i = 0;
+    if (lines[0] == "---") {
+        i++;
+        while (lines[i] != "---") {
+            i++;
+        }
+        i++;
+    }
+
+    const startIndex = i;
+
+    while (i < lines.length) {
+        const line = lines[i];
+
+        if (!line.startsWith(headingMd)) {
+            i++;
+            continue;
+        }
+
+        const lineDate = moment(line.split(" ", 2)[1], settings.dateFormat);
+
+        if (!lineDate.isValid()) {
+            i++;
+            continue;
+        }
+
+        if (lineDate.isAfter(date)) {
+            encounteredLaterDate = true;
+            i++;
+            continue;
+        }
+
+        if (lineDate.isSame(date, "date")) {
+            return [fileContent, i];
+        }
+
+        if (lineDate.isBefore(date)) {
+            if (lineDate.month() < date.month()) {
+                note += "\n" + getSectionForMonth(settings, lineDate);
+            }
+
+            lines.splice(i, 0, note);
+            return [lines.join("\n"), i];
+        }
+
+        i++;
+    }
+
+    if (encounteredLaterDate) {
+        lines.push(note);
+        return [lines.join("\n"), lines.length];
+    }
+
+    lines.splice(startIndex, 0, note);
+    return [lines.join("\n"), startIndex];
 };

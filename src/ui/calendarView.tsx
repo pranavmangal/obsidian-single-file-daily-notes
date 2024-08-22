@@ -3,7 +3,6 @@ import {
     ItemView,
     MarkdownView,
     Modal,
-    moment,
     TFile,
     WorkspaceLeaf,
 } from "obsidian";
@@ -14,7 +13,11 @@ import { createRoot, Root } from "react-dom/client";
 
 import SingleFileDailyNotes from "../main";
 import { VIEW_TYPE_CALENDAR } from "../constants";
-import { getDailyNotesFile, getHeadingForDate, getHeadingMd } from "../utils";
+import {
+    getDailyNotesFile,
+    getHeadingForDate,
+    insertNoteForDate,
+} from "../utils";
 
 import Calendar from "./calendar";
 
@@ -114,8 +117,13 @@ export class CalendarView extends ItemView {
         if (file) {
             let index = 0;
 
-            await this.app.vault.process(file, (contents) => {
-                const fullNoteAndIndex = this.insertNoteForDate(date, contents);
+            await this.app.vault.process(file, (fileContent) => {
+                const fullNoteAndIndex = insertNoteForDate(
+                    fileContent,
+                    date,
+                    this.plugin.settings,
+                );
+
                 index = fullNoteAndIndex[1];
 
                 return fullNoteAndIndex[0];
@@ -123,35 +131,6 @@ export class CalendarView extends ItemView {
 
             await this.goToNote(file, index);
         }
-    }
-
-    private insertNoteForDate(
-        date: Moment,
-        contents: string,
-    ): [string, number] {
-        const { settings } = this.plugin;
-
-        const lines = contents.split("\n");
-        const note =
-            getHeadingForDate(settings, date) + "\n" + settings.noteEntry;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            if (!line.startsWith(getHeadingMd(settings))) continue;
-
-            const lineDate = moment(line.split(" ", 2)[1], settings.dateFormat);
-            if (!lineDate.isValid() || lineDate.isAfter(date)) continue;
-
-            if (lineDate.isBefore(date)) {
-                lines.splice(i, 0, note);
-                return [lines.join("\n"), i];
-            }
-        }
-
-        // If no date is found, add it to the end of the file
-        lines.push(note);
-
-        return [lines.join("\n"), lines.length];
     }
 
     containsNoteForDate(contents: string, date: Moment) {
