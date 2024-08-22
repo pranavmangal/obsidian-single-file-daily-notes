@@ -59,7 +59,10 @@ Otherwise, the plugin can be installed via [BRAT](https://github.com/TfTHacker/o
 
 ## Usage
 
--   Open the plugin settings to configure it to your preferences
+-   Disable Obsidian's built-in core daily notes plugin from settings.
+    - This plugin does not yet interact with notes created by the core plugin, or any other community plugins designed to work with it.
+    - While keeping it enabled will not affect either plugin, it may cause confusion.
+-   Open this plugin's settings to configure it to your preferences
 -   Click on the ribbon icon or select "Open daily notes" via the command palette (`⌘ + P`) to create the daily notes file.
 -   Once created, the file can be opened like a regular file, via the ribbon icon or the command palette.
 -   Start editing!
@@ -68,4 +71,6 @@ Otherwise, the plugin can be installed via [BRAT](https://github.com/TfTHacker/o
 
 The in-built daily notes system in Obsidian is pretty decent, however it works by creating a separate file for each note. There are plugins to better manage these notes and display them in different views, but they still don't change the underlying file structure.
 
-I didn't want hundreds of files in my vault dedicated to these daily notes, especially when they were quite small individually, which is why this plugin was created.
+I didn't want hundreds of files in my vault dedicated to these daily notes, especially when they were quite small individually, which is why I created this plugin.
+
+If you prefer writing longer and detailed daily notes, and wish to use the rest of Obsidian's plugin ecosystem that extends the built-in plugin, then this plugin might not be the best option for you.
