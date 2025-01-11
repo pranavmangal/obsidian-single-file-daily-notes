@@ -1,11 +1,10 @@
 import {
     App,
+    moment,
     Notice,
     PluginSettingTab,
     Setting,
     TFile,
-    debounce,
-    moment,
 } from "obsidian";
 
 import type SingleFileDailyNotes from "./main";
@@ -98,29 +97,24 @@ export class SettingsTab extends PluginSettingTab {
         new Setting(this.containerEl)
             .setName("Heading type for daily note sections")
             .setDesc(
-                "Provide the type of heading that should be used for a daily note section (h1 to h6)",
+                "Provide the type of heading that should be used for a daily note section",
             )
-            .addText((text) =>
-                text
-                    .setPlaceholder("Enter the heading type")
-                    .setValue(this.plugin.settings.headingType.toString())
-                    .onChange(
-                        debounce(async (value: string) => {
-                            const headingRegex = /^h[1-6]$/;
-                            if (!headingRegex.test(value)) {
-                                new Notice(
-                                    `Invalid heading type entered: "${value}"` +
-                                        "\nPlease fix this in the plugin settings.",
-                                );
-                                return;
-                            } else {
-                                this.plugin.settings.headingType = value;
-                                await this.plugin.saveSettings();
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOptions({
+                        h2: "h2",
+                        h3: "h3",
+                        h4: "h4",
+                        h5: "h5",
+                        h6: "h6",
+                    })
+                    .setValue(this.plugin.settings.headingType)
+                    .onChange(async (value) => {
+                        this.plugin.settings.headingType = value;
+                        await this.plugin.saveSettings();
 
-                                this.updateHeadings(value);
-                            }
-                        }, 500),
-                    ),
+                        this.updateHeadings(value);
+                    }),
             );
     }
 
