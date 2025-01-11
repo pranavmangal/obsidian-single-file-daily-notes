@@ -143,7 +143,10 @@ export const insertNoteForDate = (
         }
 
         if (lineDate.isBefore(date)) {
-            if (lineDate.month() < date.month()) {
+            if (
+                lineDate.month() < date.month() ||
+                lineDate.year() < date.year()
+            ) {
                 note += "\n" + getSectionForMonth(settings, lineDate);
             }
 
