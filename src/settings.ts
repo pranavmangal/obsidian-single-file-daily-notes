@@ -16,6 +16,7 @@ export interface PluginSettings {
     noteLocation: string;
     headingType: string;
     dateFormat: string;
+    monthFormat: string;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = Object.freeze({
@@ -24,6 +25,7 @@ export const DEFAULT_SETTINGS: PluginSettings = Object.freeze({
     noteLocation: "",
     headingType: "h3",
     dateFormat: "DD-MM-YYYY, dddd",
+    monthFormat: "MMMM YYYY",
 });
 
 export class SettingsTab extends PluginSettingTab {
@@ -42,6 +44,7 @@ export class SettingsTab extends PluginSettingTab {
         this.filePathSetting();
         this.headingTypeSetting();
         this.dateFormatSetting();
+        this.monthFormatSetting();
     }
 
     private fileNameSetting() {
@@ -126,13 +129,18 @@ export class SettingsTab extends PluginSettingTab {
                 const lines = data.split("\n");
 
                 const dateFormat = this.plugin.settings.dateFormat;
+                const monthFormat = this.plugin.settings.monthFormat;
                 const dateHeadingRegex = /^(#{1,6}) (.*)/;
                 const newHeading = getHeadingMd(this.plugin.settings);
 
                 for (const [i, line] of lines.entries()) {
                     const match = dateHeadingRegex.exec(line);
-                    if (match && moment(match[2], dateFormat, true).isValid()) {
+                    if (!match) continue;
+
+                    if (moment(match[2], dateFormat, true).isValid()) {
                         lines[i] = line.replace(match[1], newHeading);
+                    } else if (moment(match[2], monthFormat, true).isValid()) {
+                        lines[i] = line.replace(match[1], newHeading.slice(1));
                     }
                 }
 
@@ -144,29 +152,54 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     private dateFormatSetting() {
-        const dateFormatSettingDescription = new DocumentFragment();
-        dateFormatSettingDescription.createEl("span", {
-            text: "Provide a custom ",
-        });
-        dateFormatSettingDescription.appendChild(
+        const description = new DocumentFragment();
+        description.createEl("span", { text: "Provide a custom " });
+        description.appendChild(
             createEl("a", {
                 text: "moment.js compatible",
                 href: "https://momentjs.com/docs/#/parsing/string-format/",
             }),
         );
-        dateFormatSettingDescription.appendText(
+        description.appendText(
             " format string for using a different date format",
         );
 
         new Setting(this.containerEl)
             .setName("Date format for daily note headings")
-            .setDesc(dateFormatSettingDescription)
+            .setDesc(description)
             .addText((text) =>
                 text
                     .setPlaceholder("Enter the format string")
                     .setValue(this.plugin.settings.dateFormat)
                     .onChange(async (value) => {
                         this.plugin.settings.dateFormat = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+    }
+
+    private monthFormatSetting() {
+        const description = new DocumentFragment();
+        description.createEl("span", { text: "Provide a custom " });
+        description.appendChild(
+            createEl("a", {
+                text: "moment.js compatible",
+                href: "https://momentjs.com/docs/#/parsing/string-format/",
+            }),
+        );
+        description.appendText(
+            " format string for using a different format for month headings",
+        );
+
+        new Setting(this.containerEl)
+            .setName("Date format for month headings")
+            .setDesc(description)
+            .addText((text) =>
+                text
+                    .setPlaceholder("Enter the format string")
+                    .setValue(this.plugin.settings.monthFormat)
+                    .onChange(async (value) => {
+                        this.plugin.settings.monthFormat = value;
                         await this.plugin.saveSettings();
                     }),
             );

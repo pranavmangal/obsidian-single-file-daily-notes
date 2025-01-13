@@ -1,5 +1,5 @@
-import { App, moment, TFile } from "obsidian";
 import { Moment } from "moment";
+import { App, moment, TFile } from "obsidian";
 
 import { PluginSettings } from "./settings";
 
@@ -89,7 +89,7 @@ export const getSectionForMonth = (
     const monthHeading =
         "#".repeat(getHeadingLevel(settings) - 1) +
         " " +
-        date.format("MMMM YYYY");
+        date.format(settings.monthFormat);
 
     return "\n" + "---\n" + monthHeading;
 };
