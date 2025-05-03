@@ -68,7 +68,7 @@ export class SettingsTab extends PluginSettingTab {
             .setDesc(
                 "Provide a custom note entry for a newly created daily note",
             )
-            .addText((text) =>
+            .addTextArea((text) =>
                 text
                     .setPlaceholder("Enter the note")
                     .setValue(this.plugin.settings.noteEntry)

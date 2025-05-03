@@ -73,17 +73,10 @@ export default class SingleFileDailyNotes extends Plugin {
     async showCalendar() {
         const { workspace } = this.app;
 
-        let leaf: WorkspaceLeaf | null;
-        const leaves = workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
-
-        if (leaves.length > 0) {
-            leaf = leaves[0];
-        } else {
-            leaf = workspace.getRightLeaf(false);
-            await leaf.setViewState({ type: VIEW_TYPE_CALENDAR, active: true });
-        }
-
-        workspace.revealLeaf(leaf);
+        await workspace.ensureSideLeaf(VIEW_TYPE_CALENDAR, "right", {
+            reveal: true,
+            active: true,
+        });
     }
 
     async hideCalendar() {
