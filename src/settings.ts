@@ -17,6 +17,7 @@ export interface PluginSettings {
     headingType: string;
     dateFormat: string;
     monthFormat: string;
+    autoCreateNoteOnFileOpen: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = Object.freeze({
@@ -26,6 +27,7 @@ export const DEFAULT_SETTINGS: PluginSettings = Object.freeze({
     headingType: "h3",
     dateFormat: "DD-MM-YYYY, dddd",
     monthFormat: "MMMM YYYY",
+    autoCreateNoteOnFileOpen: true,
 });
 
 export class SettingsTab extends PluginSettingTab {
@@ -45,6 +47,21 @@ export class SettingsTab extends PluginSettingTab {
         this.headingTypeSetting();
         this.dateFormatSetting();
         this.monthFormatSetting();
+        this.autoCreateNoteOnFileOpen()
+    }
+
+    private autoCreateNoteOnFileOpen() {
+        new Setting(this.containerEl)
+            .setName("Auto-create today's note on file open")
+            .setDesc("Automatically create today's note when the daily note file is opened")
+            .addToggle((tg) =>
+                tg
+                    .setValue(this.plugin.settings.autoCreateNoteOnFileOpen)
+                    .onChange(async (value) => {
+                        this.plugin.settings.autoCreateNoteOnFileOpen = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
     }
 
     private fileNameSetting() {
