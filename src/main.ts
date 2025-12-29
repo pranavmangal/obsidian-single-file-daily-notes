@@ -120,7 +120,7 @@ export default class SingleFileDailyNotes extends Plugin {
      * @param file - opened file
      */
     async onFileOpen(file: TFile) {
-        if (file && file.path == getDailyNotesFilePath(this.settings)) {
+        if (file && file.path == getDailyNotesFilePath(this.settings) && this.settings.autoCreateNoteOnFileOpen) {
             await this.updateDailyNote(file);
 
             if (!this.skipCursorPositioning) {
