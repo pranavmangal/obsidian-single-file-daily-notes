@@ -12,22 +12,22 @@ import { getDailyNotesFile, getHeadingMd } from "./utils";
 
 export interface PluginSettings {
     noteName: string;
-    noteEntry: string;
     noteLocation: string;
+    noteEntry: string;
+    autoCreateNoteOnFileOpen: boolean;
     headingType: string;
     dateFormat: string;
     monthFormat: string;
-    autoCreateNoteOnFileOpen: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = Object.freeze({
     noteName: "Daily Notes",
-    noteEntry: "- entry",
     noteLocation: "",
+    noteEntry: "- entry",
+    autoCreateNoteOnFileOpen: true,
     headingType: "h3",
     dateFormat: "DD-MM-YYYY, dddd",
     monthFormat: "MMMM YYYY",
-    autoCreateNoteOnFileOpen: true,
 });
 
 export class SettingsTab extends PluginSettingTab {
@@ -42,26 +42,12 @@ export class SettingsTab extends PluginSettingTab {
         this.containerEl.empty();
 
         this.fileNameSetting();
-        this.nodeEntrySetting();
         this.filePathSetting();
+        this.nodeEntrySetting();
+        this.autoCreateNoteOnFileOpenSetting();
         this.headingTypeSetting();
         this.dateFormatSetting();
         this.monthFormatSetting();
-        this.autoCreateNoteOnFileOpen()
-    }
-
-    private autoCreateNoteOnFileOpen() {
-        new Setting(this.containerEl)
-            .setName("Auto-create today's note on file open")
-            .setDesc("Automatically create today's note when the daily note file is opened")
-            .addToggle((tg) =>
-                tg
-                    .setValue(this.plugin.settings.autoCreateNoteOnFileOpen)
-                    .onChange(async (value) => {
-                        this.plugin.settings.autoCreateNoteOnFileOpen = value;
-                        await this.plugin.saveSettings();
-                    }),
-            );
     }
 
     private fileNameSetting() {
@@ -79,6 +65,23 @@ export class SettingsTab extends PluginSettingTab {
             );
     }
 
+    private filePathSetting() {
+        new Setting(this.containerEl)
+            .setName("Location of daily notes file")
+            .setDesc(
+                "Provide a path where you want the daily notes file to live (leave empty for root)",
+            )
+            .addText((text) =>
+                text
+                    .setPlaceholder("Enter the path")
+                    .setValue(this.plugin.settings.noteLocation)
+                    .onChange(async (value) => {
+                        this.plugin.settings.noteLocation = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+    }
+    
     private nodeEntrySetting() {
         new Setting(this.containerEl)
             .setName("Default entry for daily note")
@@ -95,19 +98,16 @@ export class SettingsTab extends PluginSettingTab {
                     }),
             );
     }
-
-    private filePathSetting() {
+    
+    private autoCreateNoteOnFileOpenSetting() {
         new Setting(this.containerEl)
-            .setName("Location of daily notes file")
-            .setDesc(
-                "Provide a path where you want the daily notes file to live (leave empty for root)",
-            )
-            .addText((text) =>
-                text
-                    .setPlaceholder("Enter the path")
-                    .setValue(this.plugin.settings.noteLocation)
+            .setName("Auto-create today's daily note on file open")
+            .setDesc("Automatically create today's note (if it doesn't exist) when the daily notes file is opened")
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.autoCreateNoteOnFileOpen)
                     .onChange(async (value) => {
-                        this.plugin.settings.noteLocation = value;
+                        this.plugin.settings.autoCreateNoteOnFileOpen = value;
                         await this.plugin.saveSettings();
                     }),
             );
