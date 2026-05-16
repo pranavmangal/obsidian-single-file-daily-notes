@@ -1,24 +1,20 @@
 import {
-    App,
+    type App,
     ItemView,
     MarkdownView,
     Modal,
-    TFile,
-    WorkspaceLeaf,
+    type TFile,
+    type WorkspaceLeaf,
 } from "obsidian";
-import { Moment } from "moment";
-
-import React, { createContext, StrictMode, useContext } from "react";
-import { createRoot, Root } from "react-dom/client";
-
-import SingleFileDailyNotes from "../main";
+import { createContext, StrictMode, useContext } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { VIEW_TYPE_CALENDAR } from "../constants";
+import type SingleFileDailyNotes from "../main";
 import {
     getDailyNotesFile,
     getHeadingForDate,
     insertNoteForDate,
 } from "../utils";
-
 import Calendar from "./calendar";
 
 export class CalendarView extends ItemView {
@@ -47,7 +43,11 @@ export class CalendarView extends ItemView {
         this.root.render(
             <AppContext.Provider value={this.app}>
                 <StrictMode>
-                    <Calendar onClickDate={(date) => this.onClickDate(date)} />
+                    <Calendar
+                        onClickDate={(date) => {
+                            void this.onClickDate(date);
+                        }}
+                    />
                 </StrictMode>
             </AppContext.Provider>,
         );
@@ -57,7 +57,7 @@ export class CalendarView extends ItemView {
         this.root?.unmount();
     }
 
-    async onClickDate(date: Moment) {
+    async onClickDate(date: moment.Moment) {
         const file = getDailyNotesFile(this.app, this.plugin.settings);
         if (file) {
             const contents = await this.app.vault.read(file);
@@ -80,8 +80,8 @@ export class CalendarView extends ItemView {
     async openDailyNotesTab(file: TFile) {
         const openTabs = this.app.workspace.getLeavesOfType("markdown");
         for (const tab of openTabs) {
-            if (tab.getDisplayText() == this.plugin.settings.noteName) {
-                this.app.workspace.revealLeaf(tab);
+            if (tab.getDisplayText() === this.plugin.settings.noteName) {
+                await this.app.workspace.revealLeaf(tab);
 
                 return tab;
             }
@@ -109,7 +109,7 @@ export class CalendarView extends ItemView {
         await this.scrollToNote(tab, index);
     }
 
-    async createNoteForDate(date: Moment) {
+    async createNoteForDate(date: moment.Moment) {
         const file = getDailyNotesFile(this.app, this.plugin.settings);
 
         if (file) {
@@ -131,7 +131,7 @@ export class CalendarView extends ItemView {
         }
     }
 
-    containsNoteForDate(contents: string, date: Moment) {
+    containsNoteForDate(contents: string, date: moment.Moment) {
         const lines = contents.split("\n");
 
         const heading = getHeadingForDate(this.plugin.settings, date);
@@ -145,13 +145,13 @@ export class CalendarView extends ItemView {
 }
 
 export class CreateDailyNoteModal extends Modal {
-    date: Moment;
-    create: (date: Moment) => Promise<void>;
+    date: moment.Moment;
+    create: (date: moment.Moment) => Promise<void>;
 
     constructor(
         app: App,
-        date: Moment,
-        createNoteForDate: (date: Moment) => Promise<void>,
+        date: moment.Moment,
+        createNoteForDate: (date: moment.Moment) => Promise<void>,
     ) {
         super(app);
         this.date = date;
@@ -172,9 +172,10 @@ export class CreateDailyNoteModal extends Modal {
 
             buttons
                 .createEl("button", { text: "Yes", cls: "mod-cta" })
-                .addEventListener("click", async () => {
-                    await this.create(this.date);
-                    this.close();
+                .addEventListener("click", () => {
+                    this.create(this.date).then(() => {
+                        this.close();
+                    });
                 });
         });
     }

@@ -1,18 +1,19 @@
-import { Moment } from "moment";
-import { App, moment, TFile } from "obsidian";
+import { moment as _moment, type App, TFile } from "obsidian";
 
-import { PluginSettings } from "./settings";
+import type { PluginSettings } from "./settings";
+
+export const moment = _moment as unknown as typeof _moment.default;
 
 /**
  * Returns the path for the daily notes file
  */
 export const getDailyNotesFilePath = (settings: PluginSettings) => {
-    const file = settings.noteName + ".md";
+    const file = `${settings.noteName}.md`;
 
-    if (settings.noteLocation == "") {
+    if (settings.noteLocation === "") {
         return file;
     } else {
-        return settings.noteLocation + "/" + file;
+        return `${settings.noteLocation}/${file}`;
     }
 };
 
@@ -40,7 +41,7 @@ export const getDailyNotesFile = (
  * // Returns 3
  */
 export const getHeadingLevel = (settings: PluginSettings): number => {
-    return parseInt(settings.headingType[1]);
+    return parseInt(settings.headingType[1], 10);
 };
 
 /**
@@ -61,9 +62,9 @@ export const getHeadingMd = (settings: PluginSettings): string => {
  */
 export const getHeadingForDate = (
     settings: PluginSettings,
-    date: Moment,
+    date: moment.Moment,
 ): string => {
-    return getHeadingMd(settings) + " " + date.format(settings.dateFormat);
+    return `${getHeadingMd(settings)} ${date.format(settings.dateFormat)}`;
 };
 
 /**
@@ -77,21 +78,18 @@ export const getTodayHeading = (settings: PluginSettings): string => {
 
 export const getSectionForDate = (
     settings: PluginSettings,
-    date: Moment,
+    date: moment.Moment,
 ): string => {
-    return getHeadingForDate(settings, date) + "\n" + settings.noteEntry;
+    return `${getHeadingForDate(settings, date)}\n${settings.noteEntry}`;
 };
 
 export const getSectionForMonth = (
     settings: PluginSettings,
-    date: Moment,
+    date: moment.Moment,
 ): string => {
-    const monthHeading =
-        "#".repeat(getHeadingLevel(settings) - 1) +
-        " " +
-        date.format(settings.monthFormat);
+    const monthHeading = `${"#".repeat(getHeadingLevel(settings) - 1)} ${date.format(settings.monthFormat)}`;
 
-    return "\n" + "---\n" + monthHeading;
+    return `\n---\n${monthHeading}`;
 };
 
 export const insertNoteForDate = (
@@ -107,9 +105,9 @@ export const insertNoteForDate = (
 
     // Offset start index if properties are present
     let i = 0;
-    if (lines[0] == "---") {
+    if (lines[0] === "---") {
         i++;
-        while (lines[i] != "---") {
+        while (lines[i] !== "---") {
             i++;
         }
         i++;
@@ -147,7 +145,7 @@ export const insertNoteForDate = (
                 lineDate.month() < date.month() ||
                 lineDate.year() < date.year()
             ) {
-                note += "\n" + getSectionForMonth(settings, lineDate);
+                note += `\n${getSectionForMonth(settings, lineDate)}`;
             }
 
             lines.splice(i, 0, note);

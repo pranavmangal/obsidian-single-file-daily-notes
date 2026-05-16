@@ -1,8 +1,8 @@
 {
     "id": "single-file-daily-notes",
     "name": "Single File Daily Notes",
-    "version": "1.4.1",
-    "minAppVersion": "0.15.0",
+    "version": "1.4.2",
+    "minAppVersion": "1.7.2",
     "description": "Create and manage daily notes in a single file.",
     "author": "Pranav Mangal",
     "authorUrl": "https://mang.al",

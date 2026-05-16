@@ -1,14 +1,6 @@
-import {
-    App,
-    moment,
-    Notice,
-    PluginSettingTab,
-    Setting,
-    TFile,
-} from "obsidian";
-
+import { type App, Notice, PluginSettingTab, Setting, TFile } from "obsidian";
 import type SingleFileDailyNotes from "./main";
-import { getDailyNotesFile, getHeadingMd } from "./utils";
+import { getDailyNotesFile, getHeadingMd, moment } from "./utils";
 
 export interface PluginSettings {
     noteName: string;
@@ -81,7 +73,7 @@ export class SettingsTab extends PluginSettingTab {
                     }),
             );
     }
-    
+
     private nodeEntrySetting() {
         new Setting(this.containerEl)
             .setName("Default entry for daily note")
@@ -98,11 +90,13 @@ export class SettingsTab extends PluginSettingTab {
                     }),
             );
     }
-    
+
     private autoCreateNoteOnFileOpenSetting() {
         new Setting(this.containerEl)
             .setName("Auto-create today's daily note on file open")
-            .setDesc("Automatically create today's note (if it doesn't exist) when the daily notes file is opened")
+            .setDesc(
+                "Automatically create today's note (if it doesn't exist) when the daily notes file is opened",
+            )
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.autoCreateNoteOnFileOpen)
@@ -142,7 +136,7 @@ export class SettingsTab extends PluginSettingTab {
         const file = getDailyNotesFile(this.app, this.plugin.settings);
 
         if (file instanceof TFile) {
-            this.app.vault.process(file, (data) => {
+            void this.app.vault.process(file, (data) => {
                 const lines = data.split("\n");
 
                 const dateFormat = this.plugin.settings.dateFormat;
@@ -170,7 +164,7 @@ export class SettingsTab extends PluginSettingTab {
 
     private dateFormatSetting() {
         const description = new DocumentFragment();
-        description.createEl("span", { text: "Provide a custom " });
+        description.createSpan({ text: "Provide a custom " });
         description.appendChild(
             createEl("a", {
                 text: "moment.js compatible",
@@ -197,7 +191,7 @@ export class SettingsTab extends PluginSettingTab {
 
     private monthFormatSetting() {
         const description = new DocumentFragment();
-        description.createEl("span", { text: "Provide a custom " });
+        description.createSpan({ text: "Provide a custom " });
         description.appendChild(
             createEl("a", {
                 text: "moment.js compatible",

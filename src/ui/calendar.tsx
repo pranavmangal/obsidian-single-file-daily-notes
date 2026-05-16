@@ -1,13 +1,12 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
-import { Moment } from "moment";
 import cx from "classnames";
-
+import { type Dispatch, type SetStateAction, useState } from "react";
+import { moment } from "../utils";
 import { ChevronLeft, ChevronRight, Dot } from "./components";
 
 export default function Calendar({
     onClickDate,
 }: {
-    onClickDate: (date: Moment) => void;
+    onClickDate: (date: moment.Moment) => void;
 }) {
     const [date, setDate] = useState(today());
     const monthDates = getMonthWeeks(date);
@@ -35,8 +34,8 @@ function Navigation({
     date,
     setDate,
 }: {
-    date: Moment;
-    setDate: Dispatch<SetStateAction<Moment>>;
+    date: moment.Moment;
+    setDate: Dispatch<SetStateAction<moment.Moment>>;
 }) {
     return (
         <div className="nav">
@@ -44,7 +43,6 @@ function Navigation({
                 className="nav-button"
                 onClick={() => setDate(prevMonth(date))}
             />
-
             <Dot className="nav-button" onClick={() => setDate(today())} />
             <ChevronRight
                 className="nav-button"
@@ -54,12 +52,12 @@ function Navigation({
     );
 }
 
-function Columns({ week }: { week: Moment[] }) {
+function Columns({ week }: { week: moment.Moment[] }) {
     return (
         <colgroup>
-            {week.map((date, index) => (
+            {week.map((date) => (
                 <col
-                    key={index}
+                    key={date.toISOString()}
                     className={isWeekend(date) ? "weekend" : undefined}
                 />
             ))}
@@ -68,13 +66,13 @@ function Columns({ week }: { week: Moment[] }) {
 }
 
 function DayNames() {
-    const weekDayNames = window.moment.weekdaysShort(true);
+    const weekDayNames = moment.weekdaysShort(true);
 
     return (
         <thead>
             <tr>
-                {weekDayNames.map((day, index) => (
-                    <th key={index}>{day}</th>
+                {weekDayNames.map((day) => (
+                    <th key={day}>{day}</th>
                 ))}
             </tr>
         </thead>
@@ -86,17 +84,17 @@ function MonthDates({
     date,
     onClickDate,
 }: {
-    monthDates: Moment[][];
-    date: Moment;
-    onClickDate: (date: Moment) => void;
+    monthDates: moment.Moment[][];
+    date: moment.Moment;
+    onClickDate: (date: moment.Moment) => void;
 }) {
     return (
         <tbody>
-            {monthDates.map((week, index) => (
-                <tr key={index}>
-                    {week.map((day, index) => (
+            {monthDates.map((week) => (
+                <tr key={week[0].toISOString()}>
+                    {week.map((day) => (
                         <Day
-                            key={index}
+                            key={day.toISOString()}
                             date={day}
                             month={date.month()}
                             onClick={onClickDate}
@@ -113,18 +111,25 @@ function Day({
     month,
     onClick,
 }: {
-    date: Moment;
+    date: moment.Moment;
     month: number;
-    onClick: (date: Moment) => void;
+    onClick: (date: moment.Moment) => void;
 }) {
     return (
         <td>
             <div
+                role="button"
+                tabIndex={0}
                 className={cx("day", {
                     today: date.isSame(today(), "day"),
                     "adjacent-month": date.month() !== month,
                 })}
                 onClick={() => onClick(date)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        onClick(date);
+                    }
+                }}
             >
                 {date.format("D")}
             </div>
@@ -132,41 +137,41 @@ function Day({
     );
 }
 
-function today(): Moment {
-    return window.moment();
+function today(): moment.Moment {
+    return moment();
 }
 
-export function nextMonth(date: Moment): Moment {
+export function nextMonth(date: moment.Moment): moment.Moment {
     return date.clone().add(1, "month");
 }
 
-export function prevMonth(date: Moment): Moment {
+export function prevMonth(date: moment.Moment): moment.Moment {
     return date.clone().subtract(1, "month");
 }
 
-export function nextYear(date: Moment): Moment {
+export function nextYear(date: moment.Moment): moment.Moment {
     return date.clone().add(1, "year");
 }
 
-export function prevYear(date: Moment): Moment {
+export function prevYear(date: moment.Moment): moment.Moment {
     return date.clone().subtract(1, "year");
 }
 
-export function isWeekend(day: Moment): boolean {
-    return day.isoWeekday() === 6 || day.isoWeekday() === 7;
+export function isWeekend(day: moment.Moment): boolean {
+    return day.day() === 0 || day.day() === 6;
 }
 
-function getMonthWeeks(date: Moment): Moment[][] {
+function getMonthWeeks(date: moment.Moment): moment.Moment[][] {
     const startOfMonth = date.clone().startOf("month");
     const endOfMonth = date.clone().endOf("month");
 
     const currentDay = startOfMonth;
     currentDay.subtract(currentDay.weekday(), "days");
 
-    const weeks: Moment[][] = [];
+    const weeks: moment.Moment[][] = [];
 
     while (currentDay <= endOfMonth) {
-        const week: Moment[] = [];
+        const week: moment.Moment[] = [];
         for (let i = 0; i < 7; i++) {
             week.push(currentDay.clone());
             currentDay.add(1, "days");

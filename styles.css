@@ -1,12 +1,12 @@
-.workspace-leaf-content[data-type=calendar] .view-content {
-    padding: 16px !important;
-}
-
 #calendar {
     --color-background-heading: transparent;
     --color-background-day: transparent;
     --color-background-today: transparent;
-    --color-background-weekend: color-mix(in srgb, var(--text-normal) 10%, transparent);
+    --color-background-weekend: color-mix(
+        in srgb,
+        var(--text-normal) 10%,
+        transparent
+    );
 
     --color-button: var(--text-muted);
 
@@ -20,10 +20,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.month-and-nav {
-    margin: 0 0 12px 0;
+    margin-bottom: 12px;
 }
 
 .month-and-nav h3 {
@@ -41,7 +38,9 @@
     border-radius: 4px;
     color: var(--color-button);
     cursor: pointer;
-    transition: background-color 0.1s ease-in, color 0.1s ease-in;
+    transition:
+        background-color 0.1s ease-in,
+        color 0.1s ease-in;
 }
 
 .nav-button:hover {
@@ -78,7 +77,9 @@ th {
     margin: 2px;
     position: relative;
     text-align: center;
-    transition: background-color 0.1s ease-in, color 0.1s ease-in;
+    transition:
+        background-color 0.1s ease-in,
+        color 0.1s ease-in;
     vertical-align: baseline;
 }
 
@@ -98,7 +99,7 @@ th {
 }
 
 .adjacent-month {
-    color: color-mix(in srgb, var(--color-text-day) 35%, transparent)
+    color: color-mix(in srgb, var(--color-text-day) 35%, transparent);
 }
 
 .modal-buttons {

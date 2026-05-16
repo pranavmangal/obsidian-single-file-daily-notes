@@ -1,6 +1,6 @@
 {
     "name": "obsidian-single-file-daily-notes",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "An Obsidian plugin to create and manage daily notes in a single file.",
     "main": "main.js",
     "scripts": {
@@ -12,19 +12,14 @@
     "author": "Pranav Mangal",
     "license": "MIT",
     "devDependencies": {
+        "@biomejs/biome": "2.4.15",
         "@types/node": "^16.18.126",
         "@types/react": "^18.3.20",
         "@types/react-dom": "^18.3.7",
-        "@typescript-eslint/eslint-plugin": "5.29.0",
-        "@typescript-eslint/parser": "5.29.0",
-        "builtin-modules": "3.3.0",
-        "esbuild": ">=0.25.0",
-        "eslint": "^8.57.1",
-        "eslint-config-prettier": "^9.1.0",
+        "esbuild": ">=0.28.0",
         "obsidian": "latest",
-        "prettier": "3.2.5",
-        "tslib": "2.4.0",
-        "typescript": "4.7.4"
+        "tslib": "2.8.1",
+        "typescript": "^6.0.3"
     },
     "dependencies": {
         "classnames": "^2.5.1",
